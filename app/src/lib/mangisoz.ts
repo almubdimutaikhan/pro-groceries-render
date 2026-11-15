@@ -7,6 +7,7 @@
  *  - OCR  POST /api/v1/ocr/image                 multipart file, mode=text   X-API-Key
  */
 import { getCreds, AI_PROXY_BASE, mangisozViaProxy } from './credentials';
+import { proxyFetch } from './backend';
 
 const BASE = 'https://mangisoz.nu.edu.kz/backend/api/v1';
 const STT_BRANDS = 'Tide, Barilla, Kroger, Simple Truth, Private Selection, Horizon, Eggland\'s Best, Cheerios, Folgers, Heinz, Skippy, Jif, Bounty, Charmin, Chobani, Quaker, Ragu, Dawn, Gain, Fairlife, Starbucks';
@@ -41,7 +42,7 @@ export async function transcribe(audio: Blob, language = 'en'): Promise<string> 
   // Brand names in the prompt fix real mishearings (verified: "Tide" came back as "tied" without it).
   fd.append('prompt', `A US grocery shopping list with brands, sizes and quantities. Brands: ${STT_BRANDS}.`);
   const res = mangisozViaProxy()
-    ? await fetch(`${AI_PROXY_BASE}/stt`, { method: 'POST', body: fd, signal: AbortSignal.timeout(60000) })
+    ? await proxyFetch(`${AI_PROXY_BASE}/stt`, { method: 'POST', body: fd, signal: AbortSignal.timeout(60000) })
     : await fetch(`${BASE}/stt/audio/transcriptions`, {
       method: 'POST', headers: { Authorization: `Bearer ${key(VOICE_UNAVAILABLE)}` }, body: fd, signal: AbortSignal.timeout(60000),
     });
@@ -63,7 +64,7 @@ export function stopSpeaking(): void {
 export async function speak(text: string, lang = 'en', onEnd?: () => void): Promise<void> {
   stopSpeaking();
   const res = mangisozViaProxy()
-    ? await fetch(`${AI_PROXY_BASE}/tts`, {
+    ? await proxyFetch(`${AI_PROXY_BASE}/tts`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text: text.slice(0, 1500), lang, speaker: 'female' }), signal: AbortSignal.timeout(60000),
     })
@@ -112,7 +113,7 @@ export async function ocrImage(original: Blob): Promise<string> {
   fd.append('mode', 'text');
   const viaProxy = mangisozViaProxy();
   const res = viaProxy
-    ? await fetch(`${AI_PROXY_BASE}/ocr`, { method: 'POST', body: fd, signal: AbortSignal.timeout(60000) })
+    ? await proxyFetch(`${AI_PROXY_BASE}/ocr`, { method: 'POST', body: fd, signal: AbortSignal.timeout(60000) })
     : await fetch(`${BASE}/ocr/image`, {
       method: 'POST', headers: { 'X-API-Key': key(PHOTO_UNAVAILABLE) }, body: fd, signal: AbortSignal.timeout(60000),
     });

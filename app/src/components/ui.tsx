@@ -1,3 +1,4 @@
+import { BACKEND_SLEEPY_MESSAGE, onBackendTrouble } from '../lib/backend';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { Icon } from './Icon';
@@ -355,17 +356,19 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
   );
 }
 /* ---------- toast ---------- */
-let pushToast: (t: string) => void = () => undefined;
-export function toast(text: string) { pushToast(text); }
+let pushToast: (t: string, ms?: number) => void = () => undefined;
+export function toast(text: string, ms?: number) { pushToast(text, ms); }
 
 export function Toasts() {
   const [items, setItems] = useState<Array<{ id: number; text: string }>>([]);
   useEffect(() => {
-    pushToast = text => {
+    pushToast = (text, ms = 3200) => {
       const id = Date.now() + Math.random();
       setItems(x => [...x.slice(-2), { id, text }]);
-      setTimeout(() => setItems(x => x.filter(i => i.id !== id)), 3200);
+      setTimeout(() => setItems(x => x.filter(i => i.id !== id)), ms);
     };
+    // Our server runs on a free host that sleeps: say so kindly, and leave the note up long enough to read.
+    return onBackendTrouble(() => toast(BACKEND_SLEEPY_MESSAGE, 10_000));
   }, []);
   return (
     <div className="toasts" aria-live="polite">

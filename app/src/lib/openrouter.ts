@@ -6,6 +6,7 @@
 import type { ListLine } from './types';
 import { getCreds, hasOpenRouter, OPENROUTER_MODELS, AI_PROXY_BASE, parseViaProxy } from './credentials';
 import { parseLine, parseList } from './parser';
+import { proxyFetch } from './backend';
 
 const SCHEMA = {
   name: 'grocery_list',
@@ -37,7 +38,7 @@ export async function parseWithAI(text: string): Promise<{ lines: ListLine[]; us
   try {
     let items: unknown;
     if (parseViaProxy()) {
-      const res = await fetch(`${AI_PROXY_BASE}/parse`, {
+      const res = await proxyFetch(`${AI_PROXY_BASE}/parse`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: text.slice(0, 4000) }), signal: AbortSignal.timeout(25000),
       });

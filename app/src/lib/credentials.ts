@@ -2,6 +2,8 @@
  * Session credentials (SYSTEM.md §6). Held in memory only: never in code, URLs, build variables,
  * localStorage or IndexedDB. A reload clears them and the UI shows a reconnect state.
  */
+import { proxyFetch } from './backend';
+
 export interface Creds {
   mangisozKey: string;
   krogerToken: string;
@@ -66,7 +68,7 @@ let proxyReady = false;
 export const krogerViaProxy = () => proxyReady && creds.krogerToken.length <= 10;
 
 if (KROGER_PROXY_BASE && typeof window !== 'undefined') {
-  fetch(`${KROGER_PROXY_BASE}/status`)
+  proxyFetch(`${KROGER_PROXY_BASE}/status`)
     .then(r => (r.ok ? r.json() : null))
     .then((s: { configured?: boolean } | null) => {
       if (!s?.configured) return;
@@ -87,7 +89,7 @@ export const mangisozViaProxy = () => aiProxy.mangisoz && !creds.mangisozKey.sta
 export const parseViaProxy = () => aiProxy.parse && creds.openrouterKey.length <= 10;
 
 if (AI_PROXY_BASE && typeof window !== 'undefined') {
-  fetch(`${AI_PROXY_BASE}/status`)
+  proxyFetch(`${AI_PROXY_BASE}/status`)
     .then(r => (r.ok ? r.json() : null))
     .then((s: { mangisoz?: boolean; parse?: boolean } | null) => {
       if (!s) return;

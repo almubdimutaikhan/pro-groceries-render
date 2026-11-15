@@ -10,6 +10,7 @@ import { toCents } from './money';
 import { parseSize } from './units';
 import { getCreds, krogerViaProxy, KROGER_PROXY_BASE } from './credentials';
 import * as db from './db';
+import { proxyFetch } from './backend';
 
 const BASE = 'https://api.kroger.com/v1';
 
@@ -23,7 +24,7 @@ export class ProviderError extends Error {
 async function getViaProxy<T>(path: string, params: Record<string, string>): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(`${KROGER_PROXY_BASE}/v1${path}?${new URLSearchParams(params)}`, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(25000) });
+    res = await proxyFetch(`${KROGER_PROXY_BASE}/v1${path}?${new URLSearchParams(params)}`, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(25000) });
   } catch {
     throw new ProviderError('The price service did not answer. Try again in a moment.', 'cors');
   }
