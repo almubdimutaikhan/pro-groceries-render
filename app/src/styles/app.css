@@ -634,3 +634,8 @@ span.demo-note { cursor: default; }
 .locked-preview { filter: blur(6px); opacity: .55; pointer-events: none; user-select: none; max-height: 70vh; overflow: hidden; display: grid; gap: var(--sb-s-4); }
 .test-mode { display: inline-flex; align-items: center; justify-content: center; gap: 6px; align-self: center; justify-self: center; width: fit-content; font: 600 12.5px/1 var(--sb-font-mono); color: var(--sb-tag-soft-ink); background: var(--sb-tag-100); border: 1px solid var(--sb-tag-line); border-radius: var(--sb-r-xs); padding: 5px 9px; }
 .cmp-summary { display: grid; gap: 12px; }
+
+/* Reset: quiet until armed */
+.reset-btn { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 8px; font-size: 13.5px; font-weight: 700; color: var(--sb-ink-3); white-space: nowrap; }
+.reset-btn:hover { color: var(--sb-ink); }
+.reset-btn.is-armed { color: #fff; background: var(--sb-danger); border-radius: var(--sb-r-sm); padding: 0 12px; }

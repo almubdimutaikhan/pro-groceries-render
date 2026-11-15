@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Brand, Money, ThemeToggle, useDesktop } from '../components/ui';
+import { Brand, Money, ThemeToggle, ResetButton, useDesktop } from '../components/ui';
 import { Icon } from '../components/Icon';
 import { useMangisoz } from '../components/voice';
 import { go } from '../state/router';
@@ -179,6 +179,7 @@ export function Welcome() {
         <header className="land-top">
           <Brand />
           <span className="land-top-actions">
+            <ResetButton />
             <ThemeToggle />
             <button className="text-btn" type="button" onClick={() => go('list')}>Start</button>
           </span>

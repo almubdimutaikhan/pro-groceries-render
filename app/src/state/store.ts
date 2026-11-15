@@ -140,3 +140,14 @@ export async function clearMyData(): Promise<void> {
   state = { ...fresh(), ...keep };
   listeners.forEach(l => l());
 }
+
+/**
+ * Full reset for the demo: basket, locks, history, example data, shopping log, the demo membership and
+ * the free re-price, in IndexedDB and in memory. (Unlike clearMyData, which keeps a membership.)
+ * The theme choice stays: it is a display setting, not shopping data.
+ */
+export async function resetAll(): Promise<void> {
+  try { await db.clearAll(); } catch { /* storage may be unavailable: the in-memory reset below still applies */ }
+  state = { ...fresh(), booted: true, dbOk: state.dbOk };
+  listeners.forEach(l => l());
+}

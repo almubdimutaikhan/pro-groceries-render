@@ -12,7 +12,7 @@ Built in 24 hours by a team of two for the **Money** track. B2C, web, US adults 
 | **Swaps** | Deterministic code in integer cents. No AI touches a price, a total or a swap decision |
 | **Voice, receipt photo, read aloud** | MangiSoz speech, OCR and emotional TTS (first female voice, neutral), through our server so no key reaches the browser |
 | **No account** | The basket lives in the browser (IndexedDB); one tap clears it |
-| **Tests** | 49 app tests (engine, flavor rules, matching, spoken lists, cache, shopper flow) and 23 server tests (Kroger proxy, voice/photo proxy, abuse limits) |
+| **Tests** | 50 app tests (engine, flavor rules, matching, spoken lists, cache, shopper flow) and 23 server tests (Kroger proxy, voice/photo proxy, abuse limits) |
 
 ## For reviewers: where to look
 
@@ -56,6 +56,20 @@ A swap is offered only if all of these hold. If anything is unknown, there is no
 
 - **AI (optional):** reading a messy list into items (OpenRouter, strict JSON schema, cheapest tested models, checked by our own parser) and speech/OCR/read-aloud (MangiSoz).
 - **Plain code:** every price, total, unit price and swap. Money is integer cents.
+
+## Where your data lives
+
+Nothing about a shopper is stored on our server. It all stays in the shopper's own browser:
+
+| Where | What |
+|---|---|
+| IndexedDB database `pro-groceries` | `app` (the current basket: list, store, locks, last result, plus the demo membership record), `comparisons`, `basketVersions`, `priceObservations`, `shoppingEvents`, `commands`, `profileVersions`, and `searchCache` (Kroger lookups, kept 15 minutes) |
+| localStorage | the light/dark choice, nothing else |
+| Memory only | operator keys typed into Settings; gone on reload |
+
+The server holds only the API keys (as environment variables) and in-memory counters for rate limits that reset when it restarts. Voice, photos and typed lists pass through it to MangiSoz and OpenRouter; the server does not store or log them.
+
+**Reset:** the **Reset** button (header on a laptop, top bar on a phone; two taps so a stray tap does nothing) clears all of the above, including the demo membership, and returns to the start. Settings → *Clear my data* does the same but keeps a membership.
 
 ## Run it
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Screen, Brand, DemoNote, Spinner, toast, Money, TabBar, useDesktop, ThemeToggle, UpgradeCard, useMember } from '../components/ui';
+import { Screen, Brand, DemoNote, Spinner, toast, Money, TabBar, useDesktop, ThemeToggle, UpgradeCard, useMember, ResetButton } from '../components/ui';
 import { Icon } from '../components/Icon';
 import { go } from '../state/router';
 import { useApp } from '../state/store';
@@ -51,7 +51,7 @@ export function Home() {
   return (
     <Screen
       top={desktop ? <h1 className="h-screen">Your usual basket</h1> : (
-        <div className="welcome-top"><Brand /><span className="land-top-actions"><ThemeToggle /><button className="icon-btn" type="button" onClick={() => go('settings')} aria-label="Settings"><Icon name="settings" /></button></span></div>
+        <div className="welcome-top"><Brand /><span className="land-top-actions"><ResetButton /><ThemeToggle /><button className="icon-btn" type="button" onClick={() => go('settings')} aria-label="Settings"><Icon name="settings" /></button></span></div>
       )}
       aside={desktop ? counter : undefined}
       className={desktop ? '' : 'with-tabs'}

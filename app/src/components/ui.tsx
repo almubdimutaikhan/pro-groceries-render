@@ -8,8 +8,9 @@ import { isOperator } from '../lib/operator';
 import { DEMO_UNLOCK, MONTH_LABEL, YEAR_LABEL } from '../lib/pricing';
 import { isStoreBrand } from '../lib/vocab';
 import { back, go, useRoute, type Route } from '../state/router';
-import { setEntitlement, useApp } from '../state/store';
+import { resetAll, setEntitlement, useApp } from '../state/store';
 import { hasKroger, subscribeCreds } from '../lib/credentials';
+import { clearSearchCache } from '../lib/kroger';
 import { usd } from '../lib/money';
 import { setThemePref, useTheme } from '../lib/theme';
 
@@ -184,6 +185,7 @@ export function AppHeader() {
         )}
         <div className="ah-right">
           <DemoNote inline />
+          <ResetButton />
           <ThemeToggle />
           <button className="icon-btn" type="button" onClick={() => go('settings')} aria-label="Settings"><Icon name="settings" /></button>
           {!hasBasket && route === 'welcome' && <button type="button" className="sb-cta sm" onClick={() => go('list')}>Start</button>}
@@ -270,6 +272,34 @@ export function PriceDetails({ items, storeName }: { items: Array<{ heading?: st
         </dl>
       ))}
     </details>
+  );
+}
+
+/**
+ * Clears the basket, history, membership and cached prices on this device and returns to the start.
+ * First tap arms it ("Tap again to clear"), second tap within 3 seconds does it, so a stray tap
+ * in the middle of a demo does nothing.
+ */
+export function ResetButton({ className = 'text-btn' }: { className?: string }) {
+  const [armed, setArmed] = useState(false);
+  useEffect(() => {
+    if (!armed) return;
+    const t = setTimeout(() => setArmed(false), 3000);
+    return () => clearTimeout(t);
+  }, [armed]);
+  async function press() {
+    if (!armed) { setArmed(true); return; }
+    setArmed(false);
+    await resetAll();
+    clearSearchCache();
+    go('welcome', true);
+    toast('Reset. Basket, history and membership are cleared. Fresh start.', 4000);
+  }
+  return (
+    <button type="button" className={`${className} reset-btn ${armed ? 'is-armed' : ''}`} onClick={press} aria-live="polite"
+      title="Clear the basket, history and membership on this device">
+      <Icon name="refresh" size={16} />{armed ? 'Tap again to clear' : 'Reset'}
+    </button>
   );
 }
 
