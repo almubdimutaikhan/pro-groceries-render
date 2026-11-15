@@ -55,7 +55,10 @@ export function subscribeCreds(fn: () => void): () => void {
  * With no base configured, no request is made and the app runs on labelled demo prices.
  */
 export const KROGER_PROXY_BASE: string = (
-  (import.meta.env.VITE_KROGER_PROXY_BASE as string | undefined) ?? (import.meta.env.DEV ? '/__kroger' : '')
+  // Same-origin by default (the Vite dev server and server/ on Render both mount it at /__kroger), so a
+  // build never depends on a dashboard setting. Set VITE_KROGER_PROXY_BASE to another host, or to an empty
+  // string to switch the proxy off. On a host with no proxy the status check 404s and the app stays in demo mode.
+  (import.meta.env.VITE_KROGER_PROXY_BASE as string | undefined) ?? '/__kroger'
 ).replace(/\/+$/, '');
 
 let proxyReady = false;
@@ -75,9 +78,10 @@ if (KROGER_PROXY_BASE && typeof window !== 'undefined') {
 
 /**
  * Voice, photo and list reading through our own server (server/ai.mjs), so the MangiSoz and OpenRouter
- * keys never reach the browser. On Render VITE_AI_PROXY_BASE=/__ai. Empty = no proxy (operator keys only).
+ * keys never reach the browser. Production defaults to the same-origin /__ai; in `npm run dev` there is none
+ * (operator keys only). Set VITE_AI_PROXY_BASE to override.
  */
-export const AI_PROXY_BASE: string = ((import.meta.env.VITE_AI_PROXY_BASE as string | undefined) ?? '').replace(/\/+$/, '');
+export const AI_PROXY_BASE: string = ((import.meta.env.VITE_AI_PROXY_BASE as string | undefined) ?? (import.meta.env.DEV ? '' : '/__ai')).replace(/\/+$/, '');
 let aiProxy = { mangisoz: false, parse: false };
 export const mangisozViaProxy = () => aiProxy.mangisoz && !creds.mangisozKey.startsWith('ak_');
 export const parseViaProxy = () => aiProxy.parse && creds.openrouterKey.length <= 10;

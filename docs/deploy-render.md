@@ -38,8 +38,8 @@ Never paste the keys into chat, an issue, or any file in this repo. They go into
 | `KROGER_SCOPE` | `product.compact` | no |
 | `MANGISOZ_API_KEY` | `ak_…` from MangiSoz (voice, photo, read aloud) | **yes** |
 | `OPENROUTER_API_KEY` | `sk-or-…` (reads messy typed lists; optional) | **yes** |
-| `VITE_AI_PROXY_BASE` | `/__ai` | no (build time) |
-| `VITE_KROGER_PROXY_BASE` | `/__kroger` | no (build time) |
+| `VITE_AI_PROXY_BASE` | `/__ai` (already the default in production, optional) | no (build time) |
+| `VITE_KROGER_PROXY_BASE` | `/__kroger` (already the default, optional) | no (build time) |
 | `NODE_VERSION` | `22` | no |
 | `VITE_STRIPE_PAYMENT_LINK` | yearly Payment Link (test mode) | public URL |
 | `VITE_STRIPE_PAYMENT_LINK_MONTHLY` | monthly Payment Link (test mode) | public URL |
