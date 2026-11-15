@@ -10,3 +10,6 @@ tmp/
 dist/
 *.tsbuildinfo
 .env.local
+
+# Team pitch material stays out of the repository
+Pro_Groceries_*.pdf
