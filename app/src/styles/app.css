@@ -627,6 +627,7 @@ span.demo-note { cursor: default; }
 .upgrade-card { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; align-items: start; padding: 14px 16px; border: 1.5px solid var(--sb-edge); border-radius: var(--sb-r-lg); background: var(--sb-surface); box-shadow: 4px 4px 0 var(--sb-violet-600); }
 .upgrade-card .uc-ic { width: 36px; height: 36px; display: grid; place-items: center; border-radius: var(--sb-r-sm); background: var(--sb-violet-100); color: var(--sb-violet-ink); }
 .upgrade-card .uc-main b { font-size: 15.5px; }
+.upgrade-card .uc-demo { grid-column: 2; font-size: 12px; color: var(--sb-ink-3); margin-top: 0; }
 .upgrade-card .uc-main p { margin-top: 3px; font-size: 14px; color: var(--sb-ink-2); line-height: 1.45; }
 .upgrade-card .uc-main .uc-price { font-size: 13px; color: var(--sb-ink); font-weight: 600; }
 .upgrade-card .sb-cta { grid-column: 1 / -1; width: 100%; }

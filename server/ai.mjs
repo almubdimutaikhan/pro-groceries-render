@@ -3,7 +3,7 @@
  *
  *   GET  /__ai/status  -> {"mangisoz": bool, "parse": bool}            which services this server can reach
  *   POST /__ai/stt     multipart audio file          -> {"text"}       MangiSoz speech-to-text
- *   POST /__ai/tts     JSON {text, lang?, speaker?}  -> audio/wav      MangiSoz text-to-speech
+ *   POST /__ai/tts     JSON {text, lang?}            -> audio/wav      MangiSoz emotional TTS (first female voice, neutral), classic TTS as fallback
  *   POST /__ai/ocr     multipart image file          -> {"text"}       MangiSoz OCR
  *   POST /__ai/parse   JSON {text}                   -> {"items"}      OpenRouter list reading
  *
@@ -138,18 +138,61 @@ export function createAiHandler(env, { now = () => Date.now() } = {}) {
     send(res, 200, { text: String(j.text ?? j.data?.text ?? '').slice(0, 4000) });
   }
 
-  async function tts(req, res) {
-    if (!hasMangisoz()) throw new HttpError(503, 'Read aloud is not configured on this server.');
-    const j = await readJson(req);
-    const text = typeof j.text === 'string' ? j.text.trim() : '';
-    if (!text) throw new HttpError(400, 'Nothing to read.');
-    if (text.length > TTS_MAX_CHARS) throw new HttpError(413, 'That text is too long to read aloud.');
-    const lang = LANGS.has(j.lang) ? j.lang : 'en';
-    const speaker = j.speaker === 'male' ? 'male' : 'female';
-    const up = await upstream(`${base}/api/v1/tts/audio`, { method: 'POST', headers: { 'X-API-Key': mangisozKey, 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ text, lang, speaker }) });
+  /* Read aloud uses MangiSoz's emotional TTS: the FIRST female voice for the language, neutral emotion.
+     (Verified 2026-11-15: for English that is "Olivia"; emotional TTS takes X-API-Key, and the audio is a
+     60-second file fetched by id.) The classic voice is the fallback so read aloud never just breaks. */
+  const voices = new Map(); // language -> { id, at }
+  async function femaleVoice(lang) {
+    const hit = voices.get(lang);
+    if (hit && now() - hit.at < 3_600_000) return hit.id;
+    let id = lang === 'en' ? 'Olivia' : null;
+    try {
+      const r = await upstream(`${base}/api/v1/expressive-tts/voices?${new URLSearchParams({ language: lang, gender: 'female' })}`, { headers: { 'X-API-Key': mangisozKey }, timeout: 15_000 });
+      if (r.ok) {
+        const list = (await r.json().catch(() => null))?.data;
+        const first = Array.isArray(list) ? list.find(v => v && typeof v.id === 'string' && (v.emotions ?? ['neutral']).includes('neutral')) : null;
+        if (first) id = first.id;
+      }
+    } catch { /* keep the fallback id */ }
+    if (id) voices.set(lang, { id, at: now() });
+    return id;
+  }
+
+  async function emotionalSpeech(text, lang) {
+    try {
+      const voice = await femaleVoice(lang);
+      if (!voice) return null;
+      const gen = await upstream(`${base}/api/v1/expressive-tts/tts`, {
+        method: 'POST', headers: { 'X-API-Key': mangisozKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, voice, language: lang, emotion: 'neutral' }), timeout: 45_000,
+      });
+      if (!gen.ok) return null;
+      const id = (await gen.json().catch(() => null))?.data?.file_id;
+      if (typeof id !== 'string' || !/^[A-Za-z0-9_-]{6,80}$/.test(id)) return null;
+      const file = await upstream(`${base}/api/v1/expressive-tts/files/${id}`, { headers: { 'X-API-Key': mangisozKey }, timeout: 30_000 });
+      if (!file.ok) return null;
+      const audio = Buffer.from(await file.arrayBuffer());
+      return audio.length && audio.length <= 12 * 1024 * 1024 ? audio : null;
+    } catch { return null; }
+  }
+
+  async function classicSpeech(text, lang) {
+    const up = await upstream(`${base}/api/v1/tts/audio`, { method: 'POST', headers: { 'X-API-Key': mangisozKey, 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ text, lang, speaker: 'female' }) });
     if (!up.ok) throw unavailable('Read aloud');
     const audio = Buffer.from(await up.arrayBuffer());
     if (audio.length > 12 * 1024 * 1024) throw unavailable('Read aloud');
+    return audio;
+  }
+
+  async function tts(req, res) {
+    if (!hasMangisoz()) throw new HttpError(503, 'Read aloud is not configured on this server.');
+    const j = await readJson(req);
+    // Square-bracket tags like [laugh] make the emotional voice make sounds; visitors don't get to add them.
+    const text = typeof j.text === 'string' ? j.text.replace(/\[[^\]]*\]/g, ' ').replace(/\s+/g, ' ').trim() : '';
+    if (!text) throw new HttpError(400, 'Nothing to read.');
+    if (text.length > TTS_MAX_CHARS) throw new HttpError(413, 'That text is too long to read aloud.');
+    const lang = LANGS.has(j.lang) ? j.lang : 'en';
+    const audio = (await emotionalSpeech(text, lang)) ?? (await classicSpeech(text, lang));
     res.writeHead(200, { 'Content-Type': 'audio/wav', 'Content-Length': audio.length, 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
     res.end(audio);
   }

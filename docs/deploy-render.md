@@ -41,6 +41,7 @@ Never paste the keys into chat, an issue, or any file in this repo. They go into
 | `VITE_AI_PROXY_BASE` | `/__ai` (already the default in production, optional) | no (build time) |
 | `VITE_KROGER_PROXY_BASE` | `/__kroger` (already the default, optional) | no (build time) |
 | `NODE_VERSION` | `22` | no |
+| `VITE_DEMO_UNLOCK` | leave unset ("See membership" unlocks the demo). Set `0` to send people to the plan page instead. | no (build time) |
 | `VITE_STRIPE_PAYMENT_LINK` | yearly Payment Link (test mode) | public URL |
 | `VITE_STRIPE_PAYMENT_LINK_MONTHLY` | monthly Payment Link (test mode) | public URL |
 

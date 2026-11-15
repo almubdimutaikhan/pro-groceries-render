@@ -211,8 +211,8 @@ test('a missing build answers 503 instead of crashing', async () => {
 const MKEY = 'ak_not_a_real_key_SECRET';
 const OKEY = 'sk-or-v1-test-openrouter-key-SECRET-0123456789';
 
-async function mockServices({ fail = false, ttsDelayMs = 0 } = {}) {
-  const seen = { stt: [], tts: [], ocr: [], chat: [] };
+async function mockServices({ fail = false, ttsDelayMs = 0, expressiveFails = false } = {}) {
+  const seen = { stt: [], tts: [], etts: [], ocr: [], chat: [] };
   const srv = http.createServer((req, res) => {
     const chunks = [];
     req.on('data', c => chunks.push(c));
@@ -225,6 +225,22 @@ async function mockServices({ fail = false, ttsDelayMs = 0 } = {}) {
         seen.stt.push({ auth: req.headers.authorization, xkey: req.headers['x-api-key'], type: req.headers['content-type'], size: body.length });
         res.writeHead(200, { 'Content-Type': 'application/json' });
         return res.end(JSON.stringify({ text: '2 barilla spaghetti, tide 64 loads', logprobs: null }));
+      }
+      if (url.pathname === '/api/v1/expressive-tts/voices') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ object: 'expressive_tts.voices', data: [{ id: 'Olivia', language: 'en', emotions: ['neutral', 'happy'], gender: 'female' }, { id: 'Emma', language: 'en', emotions: ['neutral'], gender: 'female' }] }));
+      }
+      if (url.pathname === '/api/v1/expressive-tts/tts' && req.method === 'POST') {
+        seen.etts.push({ xkey: req.headers['x-api-key'], auth: req.headers.authorization, body: JSON.parse(body.toString()) });
+        if (ttsDelayMs) await new Promise(r => setTimeout(r, ttsDelayMs));
+        if (expressiveFails) { res.writeHead(500, { 'Content-Type': 'application/json' }); return res.end('{}'); }
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ object: 'expressive_tts.audio', data: { file_id: 'abcDEF123_-xyz', voice: 'Olivia', language: 'en', emotion: 'neutral' } }));
+      }
+      if (url.pathname === '/api/v1/expressive-tts/files/abcDEF123_-xyz') {
+        if (req.headers['x-api-key'] !== MKEY) { res.writeHead(401); return res.end(); }
+        res.writeHead(200, { 'Content-Type': 'audio/wav' });
+        return res.end(Buffer.from('RIFF....WAVEfmt emotional-olivia'));
       }
       if (url.pathname === '/api/v1/tts/audio') {
         seen.tts.push({ xkey: req.headers['x-api-key'], auth: req.headers.authorization, form: Object.fromEntries(new URLSearchParams(body.toString())) });
@@ -284,19 +300,30 @@ test('speech to text: forwards the audio with the Bearer key (not X-API-Key) and
   await a.close();
 });
 
-test('text to speech: X-API-Key upstream, language and voice are whitelisted, returns audio/wav', async () => {
+test('read aloud: emotional TTS, the first female voice, neutral; tags are stripped; returns audio/wav', async () => {
   const a = await startAi();
-  const r = await postJson(`${a.s.base}/__ai/tts`, { text: 'Same basket, thirteen dollars less.', lang: 'klingon', speaker: 'robot', extra: 'x' });
+  const r = await postJson(`${a.s.base}/__ai/tts`, { text: 'Same basket [laugh] thirteen dollars less.', lang: 'klingon', speaker: 'male', extra: 'x' });
   assert.equal(r.status, 200);
   assert.equal(r.headers.get('content-type'), 'audio/wav');
-  assert.match(Buffer.from(await r.arrayBuffer()).toString(), /^RIFF/);
-  const up = a.svc.seen.tts[0];
+  assert.match(Buffer.from(await r.arrayBuffer()).toString(), /emotional-olivia/);
+  const up = a.svc.seen.etts[0];
   assert.equal(up.xkey, MKEY);
-  assert.equal(up.auth, undefined);
-  assert.deepEqual(up.form, { text: 'Same basket, thirteen dollars less.', lang: 'en', speaker: 'female' });
+  assert.equal(up.auth, undefined, 'emotional TTS rejects an API key sent as a Bearer token');
+  assert.deepEqual(up.body, { text: 'Same basket thirteen dollars less.', voice: 'Olivia', language: 'en', emotion: 'neutral' });
+  assert.equal(a.svc.seen.tts.length, 0, 'the classic voice is not used when emotional TTS works');
   assert.equal((await postJson(`${a.s.base}/__ai/tts`, { text: '' })).status, 400);
+  assert.equal((await postJson(`${a.s.base}/__ai/tts`, { text: '[laugh] [cough]' })).status, 400);
   assert.equal((await postJson(`${a.s.base}/__ai/tts`, { text: 'x'.repeat(1501) })).status, 413);
   assert.equal((await fetch(`${a.s.base}/__ai/tts`, { method: 'POST', body: 'text=hi' })).status, 415);
+  await a.close();
+});
+
+test('read aloud falls back to the classic female voice when emotional TTS is down', async () => {
+  const a = await startAi({}, { expressiveFails: true });
+  const r = await postJson(`${a.s.base}/__ai/tts`, { text: 'Hello there.' });
+  assert.equal(r.status, 200);
+  assert.match(Buffer.from(await r.arrayBuffer()).toString(), /^RIFF/);
+  assert.equal(a.svc.seen.tts[0].form.speaker, 'female');
   await a.close();
 });
 
@@ -363,7 +390,7 @@ test('limits: per-minute, per-day per visitor, site-wide daily cap, and concurre
   const codes = [];
   for (let i = 0; i < 4; i++) codes.push((await postJson(`${a.s.base}/__ai/tts`, { text: `hi ${i}` })).status);
   assert.deepEqual(codes, [200, 200, 429, 429]);
-  assert.equal(a.svc.seen.tts.length, 2, 'refused requests never reach the service');
+  assert.equal(a.svc.seen.etts.length, 2, 'refused requests never reach the service');
   await a.close();
 
   a = await startAi({ AI_DAILY_PER_IP: '2' });

@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Screen, TopBar, useMember, Money } from '../components/ui';
+import { Screen, TopBar, useMember, Money, toast } from '../components/ui';
 import { Icon } from '../components/Icon';
 import { back, hashParams } from '../state/router';
 import { STRIPE_LINK, STRIPE_LINK_MONTHLY } from '../lib/credentials';
 import { useApp } from '../state/store';
 import { counterCents, grantMembership } from '../state/actions';
 import { usd } from '../lib/money';
-import { GUARANTEE_MULTIPLE, GUARANTEE_TARGET_CENTS, MONTH_CENTS, YEAR_CENTS, YEAR_DISCOUNT_PCT, YEAR_PER_MONTH_CENTS } from '../lib/pricing';
+import { DEMO_UNLOCK, GUARANTEE_MULTIPLE, GUARANTEE_TARGET_CENTS, MONTH_CENTS, YEAR_CENTS, YEAR_DISCOUNT_PCT, YEAR_PER_MONTH_CENTS } from '../lib/pricing';
 
 type Period = 'year' | 'month';
 
@@ -57,6 +57,11 @@ export function Plan() {
               <a className="sb-cta" href={link} target="_blank" rel="noopener noreferrer">Continue to checkout · {price}</a>
             ) : (
               <button className="sb-cta" type="button" disabled>Checkout opens in the live demo</button>
+            )}
+            {DEMO_UNLOCK && (
+              <button type="button" className="sb-btn" onClick={() => { grantMembership(period); toast('Membership is open for the demo. Every member feature is unlocked.', 5000); }}>
+                See membership (demo)
+              </button>
             )}
             <button type="button" className="text-btn" onClick={() => back('home')}>Keep using it free</button>
           </>

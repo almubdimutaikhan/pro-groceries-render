@@ -5,10 +5,10 @@ import { Icon } from './Icon';
 import type { Product } from '../lib/types';
 import { fmtTime } from '../lib/week';
 import { isOperator } from '../lib/operator';
-import { MONTH_LABEL, YEAR_LABEL } from '../lib/pricing';
+import { DEMO_UNLOCK, MONTH_LABEL, YEAR_LABEL } from '../lib/pricing';
 import { isStoreBrand } from '../lib/vocab';
 import { back, go, useRoute, type Route } from '../state/router';
-import { useApp } from '../state/store';
+import { setEntitlement, useApp } from '../state/store';
 import { hasKroger, subscribeCreds } from '../lib/credentials';
 import { usd } from '../lib/money';
 import { setThemePref, useTheme } from '../lib/theme';
@@ -279,6 +279,11 @@ export function useMember(): boolean {
 
 /** Shown in place of a member feature once the free allowance is used up. */
 export function UpgradeCard({ title, body }: { title: string; body: string }) {
+  function open() {
+    if (!DEMO_UNLOCK) { go('plan'); return; }
+    setEntitlement({ member: true, period: 'year', since: new Date().toISOString() });
+    toast('Membership is open for the demo. Every member feature is unlocked.', 5000);
+  }
   return (
     <section className="upgrade-card" aria-label={title}>
       <span className="uc-ic"><Icon name="lock" size={20} /></span>
@@ -287,7 +292,8 @@ export function UpgradeCard({ title, body }: { title: string; body: string }) {
         <p>{body}</p>
         <p className="uc-price mono">{YEAR_LABEL} · or {MONTH_LABEL}</p>
       </div>
-      <button type="button" className="sb-cta sm" onClick={() => go('plan')}>See membership</button>
+      <button type="button" className="sb-cta sm" onClick={open}>See membership</button>
+      {DEMO_UNLOCK && <p className="uc-demo">Demo: opens everything on this device. No payment.</p>}
     </section>
   );
 }

@@ -12,3 +12,10 @@ export const YEAR_PER_MONTH_CENTS = Math.round(YEAR_CENTS / 12);
 export const YEAR_DISCOUNT_PCT = Math.round((1 - YEAR_CENTS / (MONTH_CENTS * 12)) * 100);
 /** Savings a member should see over the year for the guarantee to hold. */
 export const GUARANTEE_TARGET_CENTS = YEAR_CENTS * GUARANTEE_MULTIPLE;
+
+/**
+ * Demo shortcut: tapping "See membership" opens every member feature on this device, no payment.
+ * There is no server to verify a payment (see README), so the member flag is demo-grade either way.
+ * Set VITE_DEMO_UNLOCK=0 at build time to switch the shortcut off and send people to the plan page instead.
+ */
+export const DEMO_UNLOCK: boolean = import.meta.env.VITE_DEMO_UNLOCK !== '0';

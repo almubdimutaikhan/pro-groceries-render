@@ -10,7 +10,7 @@ Built in 24 hours by a team of two for the **Money** track. B2C, web, US adults 
 |---|---|
 | **Live prices** | Kroger's own API, per store, with the time each price was fetched |
 | **Swaps** | Deterministic code in integer cents. No AI touches a price, a total or a swap decision |
-| **Voice, receipt photo, read aloud** | MangiSoz speech and OCR, through our server so no key reaches the browser |
+| **Voice, receipt photo, read aloud** | MangiSoz speech, OCR and emotional TTS (first female voice, neutral), through our server so no key reaches the browser |
 | **No account** | The basket lives in the browser (IndexedDB); one tap clears it |
 | **Tests** | 30 app tests (engine, flavor rules, matching, cache, shopper flow) and 22 server tests (Kroger proxy, voice/photo proxy, abuse limits) |
 
@@ -100,7 +100,7 @@ cd app && npm run test:e2e    # Playwright with mocked providers; needs a Chromi
 Honest list, so nothing here is a surprise:
 
 - **One chain.** Only Kroger-family stores get prices. Other retailers were removed rather than faked; they are roadmap only.
-- **Payment is a demo.** There is no server-side Stripe check, so the membership flag lives in the browser and is set from the success URL. It gates demo features; it is not a paywall you could ship. The money-back wording on the plan page is demo copy, not an offer.
+- **Membership is a demo unlock.** Tapping "See membership" opens every member feature on that device with no payment, so reviewers can see the full product (set `VITE_DEMO_UNLOCK=0` at build time to turn the shortcut off). **Payment is a demo.** There is no server-side Stripe check, so the membership flag lives in the browser and is set from the success URL. It gates demo features; it is not a paywall you could ship. The money-back wording on the plan page is demo copy, not an offer.
 - **Estimates, not receipts.** Totals are shelf prices before tax at fetch time. Coupons and multi-buy deals are not included. "Estimated saved" counts only shops the user marks.
 - **Kroger terms.** Commercial-use and price-caching terms have not been reviewed. The public Products API is limited to about 10,000 calls a day; the app caches each lookup for 15 minutes in the browser.
 - **Free hosting sleeps.** A Render free instance takes about a minute to wake after idle time.
