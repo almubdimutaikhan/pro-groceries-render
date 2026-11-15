@@ -73,9 +73,29 @@ if (KROGER_PROXY_BASE && typeof window !== 'undefined') {
     .catch(() => undefined);
 }
 
+/**
+ * Voice, photo and list reading through our own server (server/ai.mjs), so the MangiSoz and OpenRouter
+ * keys never reach the browser. On Render VITE_AI_PROXY_BASE=/__ai. Empty = no proxy (operator keys only).
+ */
+export const AI_PROXY_BASE: string = ((import.meta.env.VITE_AI_PROXY_BASE as string | undefined) ?? '').replace(/\/+$/, '');
+let aiProxy = { mangisoz: false, parse: false };
+export const mangisozViaProxy = () => aiProxy.mangisoz && !creds.mangisozKey.startsWith('ak_');
+export const parseViaProxy = () => aiProxy.parse && creds.openrouterKey.length <= 10;
+
+if (AI_PROXY_BASE && typeof window !== 'undefined') {
+  fetch(`${AI_PROXY_BASE}/status`)
+    .then(r => (r.ok ? r.json() : null))
+    .then((s: { mangisoz?: boolean; parse?: boolean } | null) => {
+      if (!s) return;
+      aiProxy = { mangisoz: Boolean(s.mangisoz), parse: Boolean(s.parse) };
+      listeners.forEach(fn => fn());
+    })
+    .catch(() => undefined);
+}
+
 export const hasKroger = () => creds.krogerToken.length > 10 || proxyReady;
-export const hasMangisoz = () => creds.mangisozKey.startsWith('ak_');
-export const hasOpenRouter = () => creds.openrouterKey.length > 10;
+export const hasMangisoz = () => creds.mangisozKey.startsWith('ak_') || aiProxy.mangisoz;
+export const hasOpenRouter = () => creds.openrouterKey.length > 10 || aiProxy.parse;
 
 /** Stripe test-mode Payment Links (public checkout URLs): the yearly membership and the monthly option (see lib/pricing.ts). */
 export const STRIPE_LINK: string = (import.meta.env.VITE_STRIPE_PAYMENT_LINK as string | undefined) ?? '';

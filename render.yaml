@@ -21,6 +21,13 @@ services:
         sync: false
       - key: KROGER_SCOPE
         value: product.compact
+      # Voice, photo and list reading go through /__ai on the same server (server/ai.mjs).
+      - key: VITE_AI_PROXY_BASE
+        value: /__ai
+      - key: MANGISOZ_API_KEY            # speech-to-text, read aloud, receipt photos
+        sync: false
+      - key: OPENROUTER_API_KEY          # reading messy typed lists (cheapest tested models)
+        sync: false
       # Build-time, public values: Stripe test-mode Payment Links.
       - key: VITE_STRIPE_PAYMENT_LINK
         sync: false

@@ -1,92 +1,121 @@
 # Pro Groceries
 
-**Same basket. Lower price.** Give it your usual grocery list and pick a Kroger-family store. It rebuilds the *same* basket, with the same product types, variants and quantities, from cheaper equivalents at that store's real shelf prices. You lock anything you refuse to change and leave with a list to shop from. No account needed.
+**Same basket. Lower price.**
 
-The app is a browser-only React + Vite + TypeScript app in [`app/`](app/). There is no application backend; the design is in [SYSTEM.md](SYSTEM.md) and the feature spec in [pro-groceries-features.md](pro-groceries-features.md).
+Paste your usual grocery list, pick your Kroger. Pro Groceries rebuilds the *same* basket at that store's real shelf prices, swapping in cheaper equivalents with the same product type, the same size or more, and the same variant. You lock anything you won't change, and leave with a list to shop from.
+
+Built in 24 hours by a team of two for the **Money** track. B2C, web, US adults 25 to 45.
+
+| | |
+|---|---|
+| **Live prices** | Kroger's own API, per store, with the time each price was fetched |
+| **Swaps** | Deterministic code in integer cents. No AI touches a price, a total or a swap decision |
+| **Voice, receipt photo, read aloud** | MangiSoz speech and OCR, through our server so no key reaches the browser |
+| **No account** | The basket lives in the browser (IndexedDB); one tap clears it |
+| **Tests** | 30 app tests (engine, flavor rules, matching, cache, shopper flow) and 22 server tests (Kroger proxy, voice/photo proxy, abuse limits) |
+
+## For reviewers: where to look
+
+| If you want to check | Open |
+|---|---|
+| The rule that decides every swap | [`app/src/lib/engine.ts`](app/src/lib/engine.ts) and its tests, [`engine.test.ts`](app/src/lib/engine.test.ts) |
+| That AI never sets a price | [`app/src/lib/openrouter.ts`](app/src/lib/openrouter.ts) (it only splits a messy list into items) and [`server/ai.mjs`](server/ai.mjs) (the server owns the prompt, schema and models) |
+| How Kroger is reached and the secret protected | [`server/app.mjs`](server/app.mjs), [`server/server.test.mjs`](server/server.test.mjs) |
+| What is real, what is demo, and what is not built | [Known limitations](#known-limitations) and [`docs/not-implemented.md`](docs/not-implemented.md) |
+| Design and feature spec | [`SYSTEM.md`](SYSTEM.md), [`pro-groceries-features.md`](pro-groceries-features.md) |
+
+Verified live on 15 Nov 2026 through the production server: Kroger returned real Cincinnati stores and Barilla spaghetti prices ($1.99 / 16 oz) for a real store ID; MangiSoz returned a speech transcript, a spoken WAV and receipt text; OpenRouter split a messy spoken list into items.
+
+## How it works
+
+```
+                        ┌──────────────── one Render web service ────────────────┐
+ browser                │  /            the React app (static, app/dist)          │
+ (React + Vite + TS) ───┤  /__kroger/*  Kroger proxy ───────► api.kroger.com      │
+ IndexedDB: basket,     │  /__ai/*      voice/photo/list ───► MangiSoz, OpenRouter│
+ locks, history         └──── holds every secret; nothing secret reaches the browser
+```
+
+1. **Bring a list.** Type, paste, say it, or photograph a receipt. A deterministic parser reads quantities, sizes and variants; OpenRouter can help split a messy list but never decides anything.
+2. **Pick a store.** Real Kroger-family branches near a ZIP.
+3. **Confirm what you usually buy.** A line like "milk" gets one question with up to three real products, so the baseline is what you actually buy and the saving is not inflated.
+4. **See the same basket for less.** Every swap shows both prices, the unit price and the reason. **Keep original** locks an item and the total updates instantly.
+5. **Shop.** A checklist with package counts, copy and share. "I shopped this" feeds a weekly report (once per basket per week, so re-pricing never inflates it).
+
+### What "same basket" means
+
+A swap is offered only if all of these hold. If anything is unknown, there is no swap.
+
+1. Same product type (pasta stays pasta).
+2. Same variant in every group: organic, fat level, flavor, scent, decaf, "light". *No* flavor counts as a value too, so plain never becomes vanilla.
+3. At least the requested quantity, counted in whole packages.
+4. Lower checkout cost for that quantity, not just a lower unit price.
+5. Not locked by you. Fresh produce and meat are priced but never swapped.
+
+### What the AI does, and what it does not
+
+- **AI (optional):** reading a messy list into items (OpenRouter, strict JSON schema, cheapest tested models, checked by our own parser) and speech/OCR/read-aloud (MangiSoz).
+- **Plain code:** every price, total, unit price and swap. Money is integer cents.
 
 ## Run it
 
 ```bash
-cd app
-npm install
-npm run dev          # http://localhost:5173
+cd app && npm install && npm run dev      # http://localhost:5173
 ```
 
-Out of the box it runs on a clearly labelled **demo catalog** ("Demo prices" appears wherever a demo price is shown). To see live Kroger prices locally, put your Kroger developer credentials in `.env.local` at the repository root (see [Where prices come from](#where-prices-come-from)).
+With no keys it runs on a clearly labelled **demo catalog** ("Demo prices"). For live data, copy [`.env.example`](.env.example) to `.env.local` at the repository root and fill in your own keys (never commit them):
+
+| Key | Gives you |
+|---|---|
+| `KROGER_CLIENT_ID`, `KROGER_CLIENT_SECRET` | live Kroger prices (the Vite dev server is the proxy locally) |
+| `VITE_MANGISOZ_KEY`, `VITE_OPENROUTER_KEY` in `app/.env.local` | voice, photo and list reading in development only; removed from production builds |
+
+To run exactly what is deployed (the production server, with all keys in `.env.local`):
 
 ```bash
-npm run build        # static files in app/dist/ for any HTTPS host
-npm run preview      # serve that build locally
+npm run build
+node --env-file=.env.local server/index.mjs     # http://localhost:3000
 ```
 
-## Where prices come from
+## Deploy on Render
 
-| Source | When | Label on screen |
-|---|---|---|
-| **Kroger API** (`/locations`, `/products`) | Live prices are connected | none; every price line has a **Price details** panel with store ID, product ID, regular / sale price, fetch time and source |
-| **Demo catalog** ([`app/src/demo/catalog.ts`](app/src/demo/catalog.ts)) | Live prices are not connected | "Demo prices", driven by each comparison's own `source`, so an old demo result stays labelled demo |
+One web service serves the app and both proxies. It is described in [`render.yaml`](render.yaml); the steps, the environment variables and how to check it are in [`docs/deploy-render.md`](docs/deploy-render.md). Secrets (`KROGER_CLIENT_ID`, `KROGER_CLIENT_SECRET`, `MANGISOZ_API_KEY`, `OPENROUTER_API_KEY`) are entered in the Render dashboard and are never stored in git.
 
-There is one chain, Kroger and its family brands. No other retailer's prices are modelled or derived anywhere; other chains are roadmap only.
+The server is small and strict on purpose:
 
-Kroger's API sends no CORS headers, so a browser cannot call it directly. It goes through a small **proxy** that holds the client ID and secret:
-
-- **Local development:** the Vite dev server is the proxy ([`app/vite.config.ts`](app/vite.config.ts), mounted at `/__kroger`). Put `KROGER_CLIENT_ID` and `KROGER_CLIENT_SECRET` in the root `.env.local`; it exchanges them for a token, renews it, and forwards only `GET /v1/locations` and `GET /v1/products`.
-- **Production (Render):** [`server/`](server/) is the same proxy as a tiny Node server that also serves the built app, so everything is one origin. It holds `KROGER_CLIENT_ID` / `KROGER_CLIENT_SECRET` as Render environment variables, renews the token, forwards only `GET /v1/locations` and `GET /v1/products` with `filter.*` parameters, rate-limits each visitor, and is covered by `npm run test:server`. Setup is in [docs/deploy-render.md](docs/deploy-render.md). On any other host, build with `VITE_KROGER_PROXY_BASE=https://your-host/path` and provide the contract in [`app/src/lib/credentials.ts`](app/src/lib/credentials.ts). Without a proxy the build makes no Kroger request and stays in demo mode.
-
-Lookups are cached for 15 minutes per store and search term; the cached answer keeps the time it was really fetched. The explicit **Re-price** action always fetches fresh prices.
-
-## What the AI does, and what it does not
-
-- **AI (optional, off without a key):** reading a messy typed list into items ([OpenRouter](https://openrouter.ai), strict JSON schema, checked by our own parser, cannot add prices), and reading the result aloud / turning speech and receipt photos into text ([MangiSoz](https://mangisoz.nu.edu.kz)).
-- **Deterministic code, no AI:** every price, every total, every swap decision. Money is integer cents. A swap needs the same product type, the same variant in every group (organic, fat level, flavor, scent, "light", decaf, and so on, where *no* flavor counts as a value too), at least the requested quantity, a lower checkout cost for that quantity, and no lock. If anything is unknown, no swap is offered. See [`app/src/lib/engine.ts`](app/src/lib/engine.ts).
-
-## Membership
-
-| | Free | Member |
-|---|---|---|
-| Build the cheaper basket, keep originals, shopping list | yes | yes |
-| Re-price | once | every week, in one tap |
-| Savings counter, Weekly report with Price watch | locked preview | yes |
-| Guarantee | | "Save 5× your membership or get your money back" |
-
-Price: **$49/year** (the offer) or **$5.99/month**. Each is a Stripe test-mode Payment Link: set `VITE_STRIPE_PAYMENT_LINK` and `VITE_STRIPE_PAYMENT_LINK_MONTHLY`, and set each link's success URL to `<site>/#plan?checkout=success` (add `&period=month` for the monthly one). Without the links the button reads "Checkout opens in the live demo" and does nothing.
-
-**Limitation of this demo, stated plainly:** there is no server, so payment cannot be verified. The member flag lives in this browser's IndexedDB and is set when the shopper lands on `#plan?checkout=success`. Anyone can type that address. It gates the demo features; it is not a paywall you could ship. A real launch verifies the Stripe payment server-side. "Weekly" re-pricing is on-demand; there is no background job.
-
-## Keys and operator mode
-
-Shoppers are never asked for an API key. Keys live in **Operator setup** in Settings, shown only with `?operator=1` in the address or in `npm run dev` (`?operator=0` hides it in dev). Keys stay in memory for the tab and are never saved. Voice and photo controls appear only when a MangiSoz key is present; otherwise they are not shown and everything works by typing. In dev, `VITE_MANGISOZ_KEY` in `app/.env.local` prefills the key (it is removed from production builds).
+- Forwards only `GET /v1/locations` and `GET /v1/products` to Kroger, with only `filter.*` parameters, and enforces Kroger's search rule (3+ characters, at most 8 words).
+- Voice and photo endpoints accept only the five known routes. The **server** owns the OpenRouter prompt, schema and models; a visitor can only supply text. Uploads are size-capped; each visitor is limited per minute and per day; the whole site has a daily cap and a concurrency cap, so a public link cannot drain the team's balances.
+- Upstream errors are never passed to the browser, and nothing from a request is logged.
 
 ## Tests
 
 ```bash
-npm run test:server   # production server and Kroger proxy, against a fake Kroger (repository root)
-cd app
-npm run typecheck
-npm test              # unit and flow tests (engine, flavor rules, matching, cache, shopper flow)
-npm run test:e2e      # Playwright, mocked providers: never uses real keys
+npm run test:server       # Kroger proxy, voice/photo/list proxy, limits, static serving (fake upstreams)
+cd app && npm run typecheck && npm test
+cd app && npm run test:e2e    # Playwright with mocked providers; needs a Chromium
 ```
-
-The e2e suite needs a Chromium: `npx playwright install chromium`, or point `PW_CHROMIUM_EXECUTABLE` at an installed Chrome or Edge. `e2e/requirements.spec.ts` lists SYSTEM.md requirements the MVP does not build as `test.fixme` with the reason.
 
 ## Known limitations
 
-- **Live Kroger prices need the Kroger keys on the server.** Without `KROGER_CLIENT_ID` / `KROGER_CLIENT_SECRET` set in Render, the site shows demo prices and says so. Kroger's terms on commercial use and caching have not been checked yet.
-- Payment is not verified (see Membership).
-- One chain, one store at a time; store comparison needs live prices and only compares Kroger-family stores.
-- Fresh produce and meat are priced but never swapped; medicine, alcohol and tobacco are not supported.
-- Everything is local to one browser; clearing site data clears the basket. Export and import in Settings move history between browsers.
+Honest list, so nothing here is a surprise:
+
+- **One chain.** Only Kroger-family stores get prices. Other retailers were removed rather than faked; they are roadmap only.
+- **Payment is a demo.** There is no server-side Stripe check, so the membership flag lives in the browser and is set from the success URL. It gates demo features; it is not a paywall you could ship. The money-back wording on the plan page is demo copy, not an offer.
+- **Estimates, not receipts.** Totals are shelf prices before tax at fetch time. Coupons and multi-buy deals are not included. "Estimated saved" counts only shops the user marks.
+- **Kroger terms.** Commercial-use and price-caching terms have not been reviewed. The public Products API is limited to about 10,000 calls a day; the app caches each lookup for 15 minutes in the browser.
+- **Free hosting sleeps.** A Render free instance takes about a minute to wake after idle time.
+- Medicine, alcohol and tobacco are not supported. Everything is local to one browser.
 
 ## Repository map
 
 | Path | What |
 |---|---|
-| `app/` | The application (React + Vite + TypeScript) |
-| `server/` | Production server for Render: serves `app/dist` and the Kroger proxy |
-| `render.yaml` | Render Blueprint: build, start, health check and environment variables |
-| `docs/deploy-render.md` | Step-by-step Render deployment |
+| `app/` | The application: React + Vite + TypeScript |
+| `server/` | Production server for Render: static app, Kroger proxy, voice/photo/list proxy |
+| `render.yaml` | Render Blueprint: build, start, health check, environment variables |
+| `docs/deploy-render.md` | Step-by-step deployment and checks |
+| `docs/not-implemented.md` | What is deliberately not built |
 | `SYSTEM.md`, `pro-groceries-features.md` | Current design and feature spec |
 | `docs/archive/` | Superseded earlier designs, kept for history |
-| `docs/ui-review.md` | Independent UI review of an earlier build |
 | `brand/` | Brand book and design tokens |
 | `scripts/probe-kroger.mjs` | One-off check of Kroger credentials from a terminal |

@@ -6,7 +6,7 @@
  *  - TTS  POST /api/v1/tts/audio                 text, lang        X-API-Key
  *  - OCR  POST /api/v1/ocr/image                 multipart file, mode=text   X-API-Key
  */
-import { getCreds } from './credentials';
+import { getCreds, AI_PROXY_BASE, mangisozViaProxy } from './credentials';
 
 const BASE = 'https://mangisoz.nu.edu.kz/backend/api/v1';
 const STT_BRANDS = 'Tide, Barilla, Kroger, Simple Truth, Private Selection, Horizon, Eggland\'s Best, Cheerios, Folgers, Heinz, Skippy, Jif, Bounty, Charmin, Chobani, Quaker, Ragu, Dawn, Gain, Fairlife, Starbucks';
@@ -40,9 +40,11 @@ export async function transcribe(audio: Blob, language = 'en'): Promise<string> 
   fd.append('response_format', 'json');
   // Brand names in the prompt fix real mishearings (verified: "Tide" came back as "tied" without it).
   fd.append('prompt', `A US grocery shopping list with brands, sizes and quantities. Brands: ${STT_BRANDS}.`);
-  const res = await fetch(`${BASE}/stt/audio/transcriptions`, {
-    method: 'POST', headers: { Authorization: `Bearer ${key(VOICE_UNAVAILABLE)}` }, body: fd, signal: AbortSignal.timeout(60000),
-  });
+  const res = mangisozViaProxy()
+    ? await fetch(`${AI_PROXY_BASE}/stt`, { method: 'POST', body: fd, signal: AbortSignal.timeout(60000) })
+    : await fetch(`${BASE}/stt/audio/transcriptions`, {
+      method: 'POST', headers: { Authorization: `Bearer ${key(VOICE_UNAVAILABLE)}` }, body: fd, signal: AbortSignal.timeout(60000),
+    });
   if (!res.ok) await fail(res, 'Transcription', VOICE_UNAVAILABLE);
   const j = await res.json();
   return String(j.text ?? j.data?.text ?? '').trim();
@@ -60,10 +62,15 @@ export function stopSpeaking(): void {
 
 export async function speak(text: string, lang = 'en', onEnd?: () => void): Promise<void> {
   stopSpeaking();
-  const body = new URLSearchParams({ text: text.slice(0, 12000), lang, speaker: 'female' });
-  const res = await fetch(`${BASE}/tts/audio`, {
-    method: 'POST', headers: { 'X-API-Key': key(READ_ALOUD_UNAVAILABLE) }, body, signal: AbortSignal.timeout(60000),
-  });
+  const res = mangisozViaProxy()
+    ? await fetch(`${AI_PROXY_BASE}/tts`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: text.slice(0, 1500), lang, speaker: 'female' }), signal: AbortSignal.timeout(60000),
+    })
+    : await fetch(`${BASE}/tts/audio`, {
+      method: 'POST', headers: { 'X-API-Key': key(READ_ALOUD_UNAVAILABLE) },
+      body: new URLSearchParams({ text: text.slice(0, 12000), lang, speaker: 'female' }), signal: AbortSignal.timeout(60000),
+    });
   if (!res.ok) await fail(res, 'Read aloud', READ_ALOUD_UNAVAILABLE);
   const blob = await res.blob();
   currentUrl = URL.createObjectURL(blob);
@@ -76,11 +83,15 @@ export async function ocrImage(file: Blob): Promise<string> {
   const fd = new FormData();
   fd.append('file', file, (file as File).name || 'receipt.jpg');
   fd.append('mode', 'text');
-  const res = await fetch(`${BASE}/ocr/image`, {
-    method: 'POST', headers: { 'X-API-Key': key(PHOTO_UNAVAILABLE) }, body: fd, signal: AbortSignal.timeout(60000),
-  });
+  const viaProxy = mangisozViaProxy();
+  const res = viaProxy
+    ? await fetch(`${AI_PROXY_BASE}/ocr`, { method: 'POST', body: fd, signal: AbortSignal.timeout(60000) })
+    : await fetch(`${BASE}/ocr/image`, {
+      method: 'POST', headers: { 'X-API-Key': key(PHOTO_UNAVAILABLE) }, body: fd, signal: AbortSignal.timeout(60000),
+    });
   if (!res.ok) await fail(res, 'Photo reading', PHOTO_UNAVAILABLE);
   const j = await res.json();
+  if (viaProxy) return String(j.text ?? '');
   const d = j.data ?? {};
   if (typeof d.text === 'string') return d.text;
   if (Array.isArray(d.blocks)) return d.blocks.map((b: { text?: string }) => b.text ?? '').join('\n');

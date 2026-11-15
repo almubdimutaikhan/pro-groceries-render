@@ -14,11 +14,13 @@ import path from 'node:path';
 import zlib from 'node:zlib';
 import { Buffer } from 'node:buffer';
 import { fileURLToPath } from 'node:url';
+import { createAiHandler } from './ai.mjs';
 
 const ALLOWED_PATHS = new Set(['/v1/locations', '/v1/products']);
 const MAX_PARAMS = 12;
 const MAX_VALUE = 120;
 const MAX_LIMIT = 50;
+const MAX_TERM_WORDS = 8; // Kroger: filter.term needs 3+ characters and at most 8 words
 
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8',
@@ -38,6 +40,12 @@ export function cleanQuery(search) {
   let n = 0;
   for (const [k, v] of new URLSearchParams(search)) {
     if (!/^filter\.[A-Za-z.]{1,40}$/.test(k) || v.length > MAX_VALUE || ++n > MAX_PARAMS) continue;
+    if (k === 'filter.term') {
+      const words = v.replace(/[^\p{L}\p{N}%&'.\- ]/gu, ' ').split(/\s+/).filter(Boolean).slice(0, MAX_TERM_WORDS);
+      const term = words.join(' ');
+      if (term.length >= 3) out.set(k, term);
+      continue;
+    }
     if (k === 'filter.limit') {
       const lim = Math.min(MAX_LIMIT, Math.max(1, parseInt(v, 10) || 10));
       out.set(k, String(lim));
@@ -51,6 +59,7 @@ export function createServer(opts = {}) {
   const apiBase = String(env.KROGER_API_BASE || 'https://api.kroger.com').replace(/\/+$/, '');
   const distDir = path.resolve(opts.distDir ?? env.DIST_DIR ?? fileURLToPath(new URL('../app/dist/', import.meta.url)));
   const rateLimit = opts.rateLimitPerMinute ?? Number(env.RATE_LIMIT_PER_MINUTE || 90);
+  const handleAi = createAiHandler(env);
   const hasKeys = () => Boolean(env.KROGER_CLIENT_ID && env.KROGER_CLIENT_SECRET);
 
   /* ---------- Kroger token (client_credentials), cached and renewed ---------- */
@@ -139,7 +148,11 @@ export function createServer(opts = {}) {
     if (req.method !== 'GET' || !ALLOWED_PATHS.has(sub)) return json(res, 404, { error: 'Not found.' });
     if (!hasKeys()) return json(res, 401, { error: 'The price service is not configured on this server.' });
     if (limited(req)) { res.setHeader('Retry-After', '30'); return json(res, 429, { error: 'Too many price lookups. Wait a moment and try again.' }); }
-    const query = cleanQuery(url.search).toString();
+    const clean = cleanQuery(url.search);
+    if (new URLSearchParams(url.search).has('filter.term') && !clean.has('filter.term')) {
+      return json(res, 400, { error: 'A search term needs at least 3 characters.' });
+    }
+    const query = clean.toString();
     try {
       const out = await shared(`${sub}?${query}`, () => callKroger(sub, query));
       res.writeHead(out.status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
@@ -202,6 +215,9 @@ export function createServer(opts = {}) {
     if (url.pathname === '/healthz') { res.writeHead(200, { 'Content-Type': 'text/plain', 'Cache-Control': 'no-store' }); return res.end('ok'); }
     if (url.pathname === '/__kroger' || url.pathname.startsWith('/__kroger/')) {
       return handleKroger(req, res, url).catch(() => json(res, 500, { error: 'Server error.' }));
+    }
+    if (url.pathname === '/__ai' || url.pathname.startsWith('/__ai/')) {
+      return handleAi(req, res, url).catch(() => { if (!res.headersSent) json(res, 500, { error: 'Server error.' }); else res.end(); });
     }
     try { handleStatic(req, res, url); } catch { if (!res.headersSent) res.writeHead(500); res.end(); }
   });

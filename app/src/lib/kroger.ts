@@ -60,7 +60,8 @@ interface KLocation {
 
 export async function findStores(zip: string): Promise<Store[]> {
   const r = await get<{ data?: KLocation[] }>('/locations', { 'filter.zipCode.near': zip, 'filter.limit': '8' });
-  const stores = (r.data ?? []).filter(l => l.locationId).map(l => ({
+  // Kroger's list includes placeholder entries such as "Harris Teeter - - Unused Spoke"; skip them.
+  const stores = (r.data ?? []).filter(l => l.locationId && !/unused|test store|do not use/i.test(l.name ?? '')).map(l => ({
     id: l.locationId,
     name: l.name ?? `${l.chain ?? 'Kroger'} ${l.locationId}`,
     chain: l.chain ?? 'KROGER',

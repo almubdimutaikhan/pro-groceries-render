@@ -36,6 +36,9 @@ Never paste the keys into chat, an issue, or any file in this repo. They go into
 | `KROGER_CLIENT_ID` | from Kroger | **yes** |
 | `KROGER_CLIENT_SECRET` | from Kroger | **yes** |
 | `KROGER_SCOPE` | `product.compact` | no |
+| `MANGISOZ_API_KEY` | `ak_…` from MangiSoz (voice, photo, read aloud) | **yes** |
+| `OPENROUTER_API_KEY` | `sk-or-…` (reads messy typed lists; optional) | **yes** |
+| `VITE_AI_PROXY_BASE` | `/__ai` | no (build time) |
 | `VITE_KROGER_PROXY_BASE` | `/__kroger` | no (build time) |
 | `NODE_VERSION` | `22` | no |
 | `VITE_STRIPE_PAYMENT_LINK` | yearly Payment Link (test mode) | public URL |
@@ -53,6 +56,7 @@ Open these after the first deploy (replace the host):
 |---|---|
 | `/healthz` | `ok` |
 | `/__kroger/status` | `{"configured":true}` once Kroger accepts the keys. `{"configured":false,"reason":"missing_credentials"}` means the variables aren't set; `"credentials_rejected"` means Kroger refused them (check you used the **Production** app and the right pair). |
+| `/__ai/status` | `{"mangisoz":true,"parse":true}` once the voice/photo and list-reading keys are set |
 | `/` | the landing page. With live keys there is no "Demo prices" label on the result screen. |
 
 In the app: paste a list → pick a Cincinnati store → the store names are real Kroger branches, and each price line's **Price details** shows a store ID, product ID and fetch time.
@@ -69,5 +73,5 @@ In the app: paste a list → pick a Cincinnati store → the store names are rea
 
 - **Free instances sleep** after about 15 minutes idle; the next visit waits roughly a minute. Use the `starter` plan (or open the site beforehand) for the demo.
 - **Payment is not verified** (no server-side Stripe check). The member flag is set from the success URL and lives in the visitor's browser.
-- **Voice, photo and AI list-reading** need a MangiSoz / OpenRouter key. Visitors aren't asked for one, so those controls stay hidden on the deployed site unless an operator opens `?operator=1` and pastes a key for that tab. Proxying them server-side is a later step.
+- **Voice, photo and list reading** run through `/__ai` on the same server, so visitors never need a key. If `MANGISOZ_API_KEY` is missing the controls simply don't appear. Visitors are limited per minute and per day, and the whole site has a daily cap (`AI_DAILY_TOTAL`, default 3000) so a public link can't drain the balances.
 - **Other chains** are not modelled; only Kroger-family stores get prices.

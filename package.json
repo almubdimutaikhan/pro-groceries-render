@@ -8,7 +8,7 @@
   "scripts": {
     "build": "npm --prefix app ci --include=dev && npm --prefix app run build",
     "start": "node server/index.mjs",
-    "test:server": "node --test server/server.test.mjs",
+    "test:server": "node --test --test-force-exit server/server.test.mjs",
     "test": "npm run test:server && npm --prefix app test"
   }
 }

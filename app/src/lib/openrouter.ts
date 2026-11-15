@@ -4,7 +4,7 @@
  * Falls back to the local parser on any failure.
  */
 import type { ListLine } from './types';
-import { getCreds, hasOpenRouter, OPENROUTER_MODELS } from './credentials';
+import { getCreds, hasOpenRouter, OPENROUTER_MODELS, AI_PROXY_BASE, parseViaProxy } from './credentials';
 import { parseLine, parseList } from './parser';
 
 const SCHEMA = {
@@ -35,6 +35,26 @@ const SCHEMA = {
 export async function parseWithAI(text: string): Promise<{ lines: ListLine[]; usedAI: boolean }> {
   if (!hasOpenRouter()) return { lines: parseList(text), usedAI: false };
   try {
+    let items: unknown;
+    if (parseViaProxy()) {
+      const res = await fetch(`${AI_PROXY_BASE}/parse`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: text.slice(0, 4000) }), signal: AbortSignal.timeout(25000),
+      });
+      if (!res.ok) throw new Error(String(res.status));
+      items = (await res.json()).items;
+    } else {
+      items = await direct(text);
+    }
+    if (!Array.isArray(items) || !items.length) throw new Error('empty');
+    return { lines: toLines(items), usedAI: true };
+  } catch {
+    return { lines: parseList(text), usedAI: false };
+  }
+}
+
+async function direct(text: string): Promise<unknown> {
+  {
     const { openrouterKey, openrouterModel } = getCreds();
     const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
@@ -56,19 +76,21 @@ export async function parseWithAI(text: string): Promise<{ lines: ListLine[]; us
     if (!res.ok) throw new Error(String(res.status));
     const j = await res.json();
     const parsed = JSON.parse(j.choices?.[0]?.message?.content ?? '{}');
-    if (!Array.isArray(parsed.items) || !parsed.items.length) throw new Error('empty');
+    return parsed.items;
+  }
+}
+
+function toLines(items: unknown[]): ListLine[] {
+  {
     // The model only SPLITS messy text into items and names the product type. Counts, sizes, variants,
     // brands and scope come from the deterministic parser on the shopper's own words (tested: the model
     // returned count=12 for "a dozen eggs", which would double-count with the size).
-    const lines = parsed.items.slice(0, 60).map((it: { text: string; product: string }) => {
+    return (items as Array<{ text: string; product: string }>).slice(0, 60).map(it => {
       const own = String(it.text || '').replace(/^(and|plus|also|uh|um)\s+/i, '').trim();
       const l = parseLine(own || it.product);
       const product = String(it.product || '').trim();
       const fillerOnly = /\b(our|usual|my|some|the)\b/i.test(l.description) || l.description.split(' ').length > 4;
       return product && fillerOnly && own.toLowerCase().includes(product.toLowerCase()) ? { ...l, description: product } : l;
     });
-    return { lines, usedAI: true };
-  } catch {
-    return { lines: parseList(text), usedAI: false };
   }
 }
