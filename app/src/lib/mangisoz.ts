@@ -79,9 +79,36 @@ export async function speak(text: string, lang = 'en', onEnd?: () => void): Prom
   await current.play();
 }
 
-export async function ocrImage(file: Blob): Promise<string> {
+/**
+ * Phone cameras produce 5-15 MB photos; the server accepts up to 10 MB and OCR only needs about 2200 px.
+ * Shrink to a JPEG in the browser first (also faster over mobile data). Falls back to the original file
+ * when the browser can't decode it (for example HEIC outside Safari).
+ */
+export async function shrinkImage(file: Blob, maxSide = 2200): Promise<Blob> {
+  try {
+    if (typeof createImageBitmap !== 'function' || typeof document === 'undefined') return file;
+    const bmp = await createImageBitmap(file);
+    const scale = Math.min(1, maxSide / Math.max(bmp.width, bmp.height));
+    if (scale === 1 && file.size <= 3 * 1024 * 1024) { bmp.close?.(); return file; }
+    const w = Math.round(bmp.width * scale);
+    const h = Math.round(bmp.height * scale);
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) { bmp.close?.(); return file; }
+    ctx.drawImage(bmp, 0, 0, w, h);
+    bmp.close?.();
+    const out = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
+    return out && out.size < file.size ? out : file;
+  } catch {
+    return file;
+  }
+}
+
+export async function ocrImage(original: Blob): Promise<string> {
+  const file = await shrinkImage(original);
   const fd = new FormData();
-  fd.append('file', file, (file as File).name || 'receipt.jpg');
+  fd.append('file', file, 'receipt.jpg');
   fd.append('mode', 'text');
   const viaProxy = mangisozViaProxy();
   const res = viaProxy
