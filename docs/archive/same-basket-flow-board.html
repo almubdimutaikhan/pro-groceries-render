@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Same Basket Flow Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Kalam:wght@400;700&display=swap">
+<style>
+/* Layout: an infinite dotted canvas (pan + zoom) holding two framed rows of the journey; click any step for a detail drawer. */
+:root{
+  --canvas:#eceef2; --dot:#c4cad5;
+  --ink:#1b2130; --ink-2:#596273; --ink-3:#8a92a1;
+  --frame:#ffffff; --frame-line:#d3d8e0;
+  --step:#dbe8ff; --step-line:#86aaea;
+  --hero:#12785a; --hero-ink:#ffffff;
+  --decision:#ffdcbd; --decision-line:#e0975a;
+  --sticky:#fff0a3; --sticky-shadow:rgba(90,75,0,.18);
+  --engine:#ece4ff; --engine-line:#a891e2;
+  --muted:#eef0f4; --muted-line:#c3c8d2;
+  --wire:#394152; --loop:#d0473a;
+  --ui:#ffffff; --ui-line:#dde1e8;
+  --sans:"Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --hand:"Kalam", "Comic Neue", "Segoe Print", cursive;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font-family:var(--sans);color:var(--ink);background:var(--canvas);overflow:hidden;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit}
+
+/* ---------- viewport + board ---------- */
+#viewport{position:fixed;inset:0;overflow:hidden;cursor:grab;touch-action:none;
+  background-color:var(--canvas);
+  background-image:radial-gradient(var(--dot) 1.1px, transparent 1.2px);
+  background-size:22px 22px}
+#viewport.dragging{cursor:grabbing}
+#board{position:absolute;left:0;top:0;width:2000px;height:1860px;transform-origin:0 0}
+#wires{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+
+/* ---------- board header ---------- */
+.board-title{position:absolute;left:0;top:0}
+.board-title h1{margin:0;font-size:46px;font-weight:800;letter-spacing:-1.4px;line-height:1}
+.board-title p{margin:14px 0 0;font-size:22px;color:var(--ink-2);font-weight:500}
+.board-title .meta{margin-top:12px;font-size:13px;color:var(--ink-3);letter-spacing:.2px}
+
+/* ---------- frames (Miro-style sections) ---------- */
+.frame{position:absolute;background:var(--frame);border:1px solid var(--frame-line);border-radius:4px}
+.frame-label{position:absolute;left:0;top:-30px;font-size:15px;font-weight:600;color:var(--ink-2);white-space:nowrap;display:flex;gap:10px;align-items:center}
+.frame-label b{display:inline-grid;place-items:center;height:20px;padding:0 7px;border-radius:4px;background:var(--ink);color:#fff;font-size:12px;font-weight:700}
+
+/* ---------- nodes ---------- */
+.node{position:absolute;border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;justify-content:center;gap:4px;cursor:pointer;transition:box-shadow .15s, transform .15s}
+.node h3{margin:0;font-size:16px;font-weight:700;line-height:1.2;text-wrap:balance}
+.node p{margin:0;font-size:13.5px;line-height:1.35;color:var(--ink-2)}
+.node:hover{box-shadow:0 6px 18px rgba(27,33,48,.14)}
+.node.active{box-shadow:0 0 0 3px var(--ink), 0 8px 22px rgba(27,33,48,.18)}
+.node:focus-visible{outline:3px solid var(--loop);outline-offset:3px}
+.step{background:var(--step);border:1.5px solid var(--step-line)}
+.step.hero{background:var(--hero);border-color:var(--hero)}
+.step.hero h3{color:var(--hero-ink);font-size:18px}
+.step.hero p{color:rgba(255,255,255,.82)}
+.screen{background:var(--step);border:1.5px solid var(--step-line)}
+.screen.quiet{background:var(--muted);border-color:var(--muted-line);border-style:dashed}
+.num{position:absolute;left:-13px;top:-13px;width:28px;height:28px;border-radius:50%;background:var(--ink);color:#fff;font-size:13px;font-weight:700;display:grid;place-items:center;box-shadow:0 0 0 3px var(--frame)}
+.hero .num{background:#fff;color:var(--hero);box-shadow:0 0 0 3px var(--hero)}
+
+.decision{background:none;border:0;padding:0;align-items:center;text-align:center}
+.decision svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.decision span{position:relative;font-size:15px;font-weight:700;line-height:1.2;max-width:110px}
+.decision:hover{box-shadow:none}
+.decision:hover polygon{filter:drop-shadow(0 5px 10px rgba(27,33,48,.16))}
+.decision.active{box-shadow:none}
+.decision.active polygon{stroke:var(--ink);stroke-width:3}
+
+/* column under each step: sticky + engine */
+.col{position:absolute;width:240px;display:flex;flex-direction:column;gap:14px}
+.sticky{background:var(--sticky);padding:14px 15px 13px;font-size:14px;line-height:1.42;box-shadow:0 1px 1px var(--sticky-shadow), 0 8px 14px -6px var(--sticky-shadow)}
+.sticky p{margin:0}
+.sticky .feat{margin-top:9px;padding-top:8px;border-top:1px dashed rgba(90,75,0,.3);font-size:12px;font-weight:600;color:#6b5a00;letter-spacing:.1px}
+.engine{background:var(--engine);border:1.5px dashed var(--engine-line);border-radius:6px;padding:9px 12px 10px;font-size:13px;line-height:1.38}
+.engine small{display:block;font-size:10px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:#6c55b8;margin-bottom:3px}
+
+/* wire labels */
+.wl{position:absolute;transform:translate(-50%,-50%);font-family:var(--hand);font-size:17px;line-height:1;color:var(--wire);background:var(--frame);padding:3px 8px 1px;border-radius:10px;white-space:nowrap;pointer-events:none}
+.wl.loop{color:var(--loop);font-weight:700}
+.wl.out{background:var(--canvas)}
+
+/* handwritten annotation */
+.note-hand{position:absolute;font-family:var(--hand);color:var(--loop);font-size:19px;line-height:1.15;transform:rotate(-3deg);pointer-events:none}
+
+/* bottom cards */
+.card{position:absolute;background:var(--frame);border:1px solid var(--frame-line);border-radius:6px;padding:16px 18px}
+.card h4{margin:0 0 8px;font-size:14px;font-weight:700;letter-spacing:.2px}
+.card ul{margin:0;padding-left:18px;font-size:14px;line-height:1.55;color:var(--ink-2)}
+
+/* ---------- overlay UI ---------- */
+.ui{position:fixed;z-index:20;background:var(--ui);border:1px solid var(--ui-line);border-radius:8px;box-shadow:0 2px 8px rgba(27,33,48,.08)}
+#topbar{top:max(12px, env(safe-area-inset-top));left:max(12px, env(safe-area-inset-left));display:flex;align-items:center;gap:10px;padding:8px 12px 8px 10px}
+#topbar .logo{width:26px;height:26px;border-radius:6px;background:var(--hero);display:grid;place-items:center}
+#topbar strong{font-size:14px;font-weight:700}
+#topbar span{font-size:12px;color:var(--ink-3);border-left:1px solid var(--ui-line);padding-left:10px}
+#legend{top:max(12px, env(safe-area-inset-top));right:max(12px, env(safe-area-inset-right));display:flex;gap:14px;padding:9px 14px;font-size:12.5px;color:var(--ink-2);flex-wrap:wrap;max-width:calc(100vw - 24px)}
+#legend i{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-3px;margin-right:6px}
+#legend .k-step{background:var(--step);border:1.5px solid var(--step-line)}
+#legend .k-dec{background:var(--decision);border:1.5px solid var(--decision-line);transform:rotate(45deg) scale(.82)}
+#legend .k-sticky{background:var(--sticky);border-radius:1px}
+#legend .k-engine{background:var(--engine);border:1.5px dashed var(--engine-line)}
+#zoom{right:max(12px, env(safe-area-inset-right));bottom:max(12px, env(safe-area-inset-bottom));display:flex;align-items:center}
+#zoom button{border:0;background:none;width:36px;height:36px;cursor:pointer;font-size:17px;border-radius:7px}
+#zoom button:hover{background:var(--muted)}
+#zoom button:focus-visible{outline:2px solid var(--ink)}
+#zoom output{min-width:50px;text-align:center;font-size:12.5px;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+#zoom .fit{width:auto;padding:0 12px;font-size:12.5px;font-weight:600;border-left:1px solid var(--ui-line);border-radius:0 7px 7px 0}
+#hint{left:max(12px, env(safe-area-inset-left));bottom:max(12px, env(safe-area-inset-bottom));padding:8px 12px;font-size:12px;color:var(--ink-2)}
+#hint kbd{font-family:var(--sans);font-size:11px;background:var(--muted);border:1px solid var(--ui-line);border-radius:4px;padding:1px 5px}
+#walk{left:50%;transform:translateX(-50%);bottom:max(12px, env(safe-area-inset-bottom));border:0;background:var(--ink);color:#fff;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer}
+#walk:hover{background:#000}
+
+/* ---------- drawer ---------- */
+#drawer{position:fixed;z-index:30;top:0;right:0;bottom:0;width:min(400px,100vw);background:var(--ui);border-left:1px solid var(--ui-line);box-shadow:-12px 0 30px rgba(27,33,48,.12);transform:translateX(105%);transition:transform .22s ease;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)}
+#drawer.open{transform:none}
+.dr-head{padding:18px 20px 14px;border-bottom:1px solid var(--ui-line);display:flex;gap:12px;align-items:flex-start}
+.dr-badge{flex:none;width:34px;height:34px;border-radius:50%;background:var(--ink);color:#fff;font-weight:700;display:grid;place-items:center;font-size:15px}
+.dr-badge.dec{border-radius:6px;background:var(--decision);color:var(--ink);border:1.5px solid var(--decision-line);transform:rotate(45deg) scale(.8)}
+.dr-badge.dec b{transform:rotate(-45deg)}
+.dr-head h2{margin:2px 0 3px;font-size:20px;letter-spacing:-.3px;line-height:1.2}
+.dr-head .stage{font-size:12px;color:var(--ink-3);font-weight:600;letter-spacing:.3px;text-transform:uppercase}
+.dr-close{margin-left:auto;border:0;background:none;font-size:22px;line-height:1;cursor:pointer;color:var(--ink-2);padding:4px 6px;border-radius:6px}
+.dr-close:hover{background:var(--muted)}
+.dr-body{flex:1;overflow:auto;padding:6px 20px 20px}
+.dr-sec{padding:14px 0;border-bottom:1px solid var(--ui-line)}
+.dr-sec:last-child{border-bottom:0}
+.dr-sec h5{margin:0 0 6px;font-size:11px;letter-spacing:1.1px;text-transform:uppercase;color:var(--ink-3);display:flex;align-items:center;gap:7px}
+.dr-sec h5 i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.dr-sec p{margin:0;font-size:14.5px;line-height:1.55}
+.dr-feats{display:flex;flex-direction:column;gap:6px}
+.dr-feat{display:flex;gap:10px;align-items:baseline;font-size:14px}
+.dr-feat code{font-family:var(--sans);font-weight:700;font-size:12px;background:var(--muted);padding:2px 6px;border-radius:4px;flex:none}
+.dr-feat em{font-style:normal;font-size:11px;font-weight:700;color:var(--ink-3);margin-left:auto;flex:none}
+.dr-risk{background:#fdf0ee;border-radius:6px;padding:10px 12px;font-size:14px;line-height:1.5}
+.dr-foot{display:flex;gap:8px;padding:12px 20px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--ui-line)}
+.dr-foot button{flex:1;border:1px solid var(--ui-line);background:var(--ui);border-radius:7px;padding:9px;font-size:13px;font-weight:600;cursor:pointer}
+.dr-foot button:hover{background:var(--muted)}
+.dr-foot button:disabled{opacity:.4;cursor:default}
+.dr-foot .pos{flex:none;align-self:center;font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums;min-width:46px;text-align:center}
+
+@media (max-width:720px){
+  #legend{top:auto;bottom:62px;right:12px;left:12px;font-size:11.5px;gap:10px}
+  #hint{display:none}
+  #topbar span{display:none}
+  #walk{bottom:max(12px, env(safe-area-inset-bottom));left:12px;transform:none}
+  #drawer{top:auto;height:72vh;width:100vw;border-left:0;border-top:1px solid var(--ui-line);border-radius:14px 14px 0 0;transform:translateY(105%)}
+}
+@media (prefers-reduced-motion:reduce){
+  #drawer,.node{transition:none}
+}
+</style>
+</head>
+<body>
+<div role="note" style="position:sticky;top:0;z-index:9999;padding:10px 16px;background:#FFF4D6;color:#3C2A1E;font:600 14px/1.4 system-ui,sans-serif;border-bottom:2px solid #FFB800">SUPERSEDED. Kept for history only: this board describes an earlier design and no longer matches the app. See README.md and SYSTEM.md.</div>
+
+<div id="viewport" aria-label="User flow board. Drag to pan.">
+  <div id="board">
+    <svg id="wires" width="2000" height="1860" aria-hidden="true">
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#394152"/></marker>
+        <marker id="ah-loop" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#d0473a"/></marker>
+      </defs>
+    </svg>
+  </div>
+</div>
+
+<div id="topbar" class="ui">
+  <div class="logo" aria-hidden="true">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 10h14l-1.5 9h-11z"/><path d="M9 10l3-6 3 6"/></svg>
+  </div>
+  <strong>Same Basket, Cheaper</strong>
+  <span>User flow · v2 receipt-first</span>
+</div>
+
+<div id="legend" class="ui" aria-label="Key">
+  <div><i class="k-step"></i>Screen the shopper sees</div>
+  <div><i class="k-dec"></i>Decision</div>
+  <div><i class="k-sticky"></i>Why it's built this way</div>
+  <div><i class="k-engine"></i>Under the hood</div>
+</div>
+
+<div id="hint" class="ui">Drag to pan · <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + scroll to zoom · click any step · <kbd>F</kbd> fit</div>
+<button id="walk" class="ui" type="button">Walk through the flow →</button>
+
+<div id="zoom" class="ui">
+  <button type="button" id="zout" aria-label="Zoom out">−</button>
+  <output id="zlvl">100%</output>
+  <button type="button" id="zin" aria-label="Zoom in">+</button>
+  <button type="button" id="zfit" class="fit">Fit</button>
+</div>
+
+<aside id="drawer" aria-hidden="true" aria-labelledby="dr-title">
+  <div class="dr-head">
+    <div class="dr-badge" id="dr-badge"><b id="dr-num">1</b></div>
+    <div>
+      <div class="stage" id="dr-stage">First visit</div>
+      <h2 id="dr-title">Step</h2>
+    </div>
+    <button class="dr-close" id="dr-close" type="button" aria-label="Close details">×</button>
+  </div>
+  <div class="dr-body" id="dr-body"></div>
+  <div class="dr-foot">
+    <button type="button" id="dr-prev">← Previous</button>
+    <span class="pos" id="dr-pos">1 / 11</span>
+    <button type="button" id="dr-next">Next →</button>
+  </div>
+</aside>
+
+<script>
+(() => {
+/* ================= DATA ================= */
+const STEP_W = 240, STEP_H = 110;
+
+const frames = [
+  { x:0, y:220,  w:1680, h:742, tag:'Row 1', label:'First visit · savings on screen in under 30 seconds' },
+  { x:0, y:1062, w:1980, h:510, tag:'Row 2', label:'Decide, shop, come back · the weekly loop' },
+];
+
+// Every clickable thing on the board, in the order the flow is walked.
+const nodes = [
+  { id:'s1', kind:'step', n:'1', x:40, y:508, stage:'First visit',
+    title:'Drop in last receipt', sub:'Photo, pasted text or a messy list',
+    sticky:'Starts from what people already have. No typing 40 items, no signup. The receipt gives real brands, sizes and the store.',
+    feat:'F01 Fast input · F11 Receipt photo',
+    engine:'AI reads the receipt or list into clean line items',
+    d:{
+      sees:'One screen with three ways in: snap the paper receipt, paste the order-confirmation text, or paste a messy list from Notes. An example basket is there for people who just want to look. No account.',
+      app:'AI turns the input into line items (name, brand, size, quantity) and keeps the original text beside each one so it can be corrected.',
+      why:'Typing 20 to 40 items is where the old flow lost people. A receipt also solves cold start: it holds the shopper\'s real brands, pack sizes and store, which is the honest definition of "same basket".',
+      feats:[['F01','Fast basket input','P0'],['F11','Receipt photo reconstruction','P1']],
+      risk:'Receipt abbreviations ("KRO 2% GAL") often can\'t identify an exact product. Confirm, never guess. Ship paste-text first; photo OCR is a stretch.'
+    }},
+  { id:'d1', kind:'decision', n:'?', x:370, y:488, w:190, h:150, stage:'First visit',
+    title:'Every item matched?',
+    d:{
+      sees:'Usually nothing. The shopper only sees a question when a match could change the basket in a way they would care about.',
+      app:'Each line gets a match confidence: exact, close, or unresolved. Only unresolved lines that matter trigger a question.',
+      why:'"Milk" must never silently become skim milk. One wrong match on the first visit destroys trust in every number after it.',
+      feats:[['F03','Confirmed product matching','P0']],
+      risk:'Cap it at 1 to 3 questions. More than that and the step becomes the typing chore we removed.'
+    }},
+  { id:'ask', kind:'screen', n:'', x:365, y:264, w:200, h:80, stage:'First visit',
+    title:'Ask once', sub:'"2% or whole milk?"',
+    d:{
+      sees:'A single tap-to-answer card: "Your receipt says MILK GAL. Which one?" with two or three options and the product photos.',
+      app:'The answer is stored, so next week this item is already resolved.',
+      why:'Asking once beats guessing wrong. Remembering the answer means the question never comes back.',
+      feats:[['F03','Confirmed product matching','P0'],['F09','Saved basket','P0']],
+      risk:'An unresolved item stays visible as "unpriced". It is never quietly dropped or priced at $0.'
+    }},
+  { id:'s2', kind:'step', n:'2', x:710, y:508, stage:'First visit',
+    title:'See your baseline', sub:'Usual basket today: $128.40\nKroger Downtown · 45202',
+    sticky:'Store is read off the receipt; ZIP only as fallback. Same items at today\'s prices, so the comparison is fair.',
+    feat:'F02 Store & prices · F03 Matching',
+    engine:'Match to Kroger products, pull live prices for that store',
+    d:{
+      sees:'"Your usual basket costs $128.40 at Kroger Downtown today." The store is already picked from the receipt; a ZIP field appears only if it couldn\'t be read.',
+      app:'Kroger location lookup, product search and live prices for that branch, each stamped with the time it was fetched.',
+      why:'The old flow asked for ZIP and store before showing anything. The baseline uses today\'s prices for the exact same items, because an old receipt total is not a fair thing to compare against.',
+      feats:[['F02','Exact store and price context','P0'],['F03','Confirmed product matching','P0']],
+      risk:'First thing to verify: that we can register for the Kroger API and get location-specific prices. If not, the live-price promise pauses.'
+    }},
+  { id:'s3', kind:'step', hero:true, n:'3', x:1040, y:508, stage:'First visit',
+    title:'Same basket, $13.50 less', sub:'Estimated $114.90 today',
+    sticky:'The moment that sells it. One number first, then the lines behind it: shelf price, promo, coupon, final.',
+    feat:'F07 Explained result · F04 Unit price',
+    engine:'Unit-price math + basket optimizer. No AI touches the money.',
+    d:{
+      sees:'A big "$13.50 less" with the two totals under it, how many items were priced, and the time prices were checked. Tap to expand shelf price, promotion, coupon and final for each line.',
+      app:'Every product is normalised to price per ounce, pound, count or load. The optimizer picks the cheapest acceptable option per item while keeping quantities and locks. All money math is deterministic.',
+      why:'"Cheaper" was vague before. Showing the arithmetic makes the number checkable, so it still holds when the shopper compares it to the Kroger app.',
+      feats:[['F07','Explainable estimated result','P0'],['F04','Unit-price calculation','P0']],
+      risk:'Leave coupons and member prices out unless we know the shopper qualifies. Always label it an estimate with a timestamp.'
+    }},
+  { id:'s4', kind:'step', n:'4', x:1370, y:508, stage:'First visit',
+    title:'Review 3 swaps', sub:'Store-brand milk −$1.00\n2.34¢ vs 3.12¢ per fl oz',
+    sticky:'Only the biggest wins, never 40 decisions. Each shows unit price, why it\'s equivalent and a tag: Exact · Good sub · Your call.',
+    feat:'F06 Top swaps · F04 Unit price',
+    engine:'AI writes the one-line reason behind each swap',
+    d:{
+      sees:'Three to five swap cards, biggest saving first. Each one: original vs. suggested, price, unit price, a one-line reason and a confidence tag (Exact match / Good substitute / Your call).',
+      app:'Swaps are ranked by dollars saved. AI writes the plain-English reason; it never sets a price.',
+      why:'The old flow made the shopper review every item, which felt like doing the optimizing themselves. A few high-impact swaps keeps it to seconds.',
+      feats:[['F06','Basket optimization, three useful swaps','P0'],['F04','Unit-price calculation','P0']],
+      risk:'Never auto-apply. If no swap is both cheaper and acceptable, say so and keep the original basket.'
+    }},
+  { id:'s5', kind:'step', n:'5', x:40, y:1106, stage:'Decide and shop',
+    title:'Lock or reject', sub:'One tap per item. Total updates live.',
+    sticky:'Baby formula, the family coffee and allergy items stay locked by default. Reject a $1.20 swap and the saving drops by exactly $1.20.',
+    feat:'F05 Locks & preferences',
+    engine:'Locks saved as household rules',
+    d:{
+      sees:'Accept, reject, or lock on each card. The total and the saving recalculate instantly.',
+      app:'Locks become household rules that apply to every future basket. Totals are recomputed from the same price snapshot.',
+      why:'Control without a decision queue. One bad swap ("replace my kid\'s yogurt") can lose the user, so sensitive categories start locked.',
+      feats:[['F05','Preference controls and protected items','P0']],
+      risk:'When an allergy or certification can\'t be confirmed from the data, mark it unknown and exclude that substitute by default.'
+    }},
+  { id:'s6', kind:'step', n:'6', x:370, y:1106, stage:'Decide and shop',
+    title:'Send list to the store', sub:'Kroger cart · copy · share',
+    sticky:'Copy and share always work. Pushing to the Kroger cart ships only once API access is confirmed.',
+    feat:'F08 Handoff · F12 Kroger cart',
+    engine:'Kroger Cart API, or a plain-text export',
+    d:{
+      sees:'A clean checklist with pack sizes and counts, plus buttons: Add to Kroger cart, Copy list, Share with partner.',
+      app:'Cart push uses Kroger\'s Cart API with the customer\'s own authorization. Otherwise a text export with the price timestamp.',
+      why:'The result has to turn into a shopping trip, or the saving stays theoretical.',
+      feats:[['F08','Useful shopping handoff','P0'],['F12','Authenticated Kroger cart','P1']],
+      risk:'Adding to a cart is not checkout and does not guarantee the final total. Only show the cart button once access and scopes are tested.'
+    }},
+  { id:'s7', kind:'step', n:'7', x:700, y:1106, stage:'Decide and shop',
+    title:'Shop, then snap receipt', sub:'Planned $114.90 · paid $116.10',
+    sticky:'Closes the loop. Only receipt-confirmed savings count toward the ledger, so the number stays honest.',
+    feat:'F13 Reconcile · F09 History',
+    engine:'Receipt matcher feeds the savings ledger',
+    d:{
+      sees:'Planned vs. paid, with the differences explained (price changed, item out of stock, quantity changed). The ledger: "Saved $61.20 this month".',
+      app:'The new receipt is matched line by line against the plan. Confirmed savings and estimates are stored separately.',
+      why:'A one-time "$X less" is hard to believe. Comparing against what the till actually charged builds trust week after week, and this receipt seeds next week\'s basket.',
+      feats:[['F13','Receipt reconciliation','P1'],['F09','Saved basket and honest history','P0']],
+      risk:'A receipt proves what was paid, not what the original basket would have cost. Keep the two labelled differently.'
+    }},
+  { id:'s8', kind:'step', n:'8', x:1030, y:1106, stage:'Weekly loop',
+    title:'Sunday re-price', sub:'Saved basket checked against this week\'s prices',
+    sticky:'Nothing to rebuild. This is the paid tier: weekly re-price, alerts, savings ledger. $3.99/mo is a price to test.',
+    feat:'F15 Auto re-price · F10 Subscription',
+    engine:'Weekly job re-prices every saved basket',
+    d:{
+      sees:'Nothing, unless it\'s worth it. The usual basket, locks and answers are remembered.',
+      app:'A scheduled job re-prices each saved basket against current prices and promotions.',
+      why:'"Come back next week" isn\'t a retention loop on its own. The app does the remembering. This is also what people pay a few dollars a month for.',
+      feats:[['F15','Automatic weekly repricing','P2'],['F10','Subscription and payment','P0'],['F09','Saved basket','P0']],
+      risk:'Ship a manual "Recheck this basket" button first. Automation needs accounts, a scheduler and fresh data. Re-checking must not inflate the savings counter.'
+    }},
+  { id:'d2', kind:'decision', n:'?', x:1360, y:1086, w:190, h:150, stage:'Weekly loop',
+    title:'Saving over $5?',
+    d:{
+      sees:'Nothing. This is a rule the shopper can change in settings.',
+      app:'Compares this week\'s best basket with the usual one. Above the threshold, send an alert; below it, stay silent.',
+      why:'An app that pings every week with "$0.40 less" gets muted. A threshold keeps every alert worth opening.',
+      feats:[['F16','Consent-based savings alerts','P2']],
+      risk:'Alerts are opt-in, with an easy unsubscribe.'
+    }},
+  { id:'alert', kind:'screen', n:'', x:1700, y:1106, w:240, h:110, stage:'Weekly loop',
+    title:'Alert', sub:'"Your usual basket is $8.40 cheaper this week"',
+    sticky:'Only pings when it\'s worth it. Opens straight at step 3 with this week\'s swaps ready.',
+    feat:'F16 Savings alerts',
+    d:{
+      sees:'A push or email on Sunday: "Your usual basket is $8.40 cheaper this week." Tapping it opens step 3 with the new swaps already worked out.',
+      app:'Deep link into the result screen with the fresh price snapshot.',
+      why:'This replaces typing a new list every week. The second visit takes one tap, not two minutes.',
+      feats:[['F16','Consent-based savings alerts','P2'],['F09','Saved basket','P0']],
+      risk:'For the hackathon, show this as a design. Don\'t claim live alerts unless the job and delivery actually run.'
+    }},
+  { id:'quiet', kind:'screen', quiet:true, n:'', x:1355, y:1380, w:200, h:80, stage:'Weekly loop',
+    title:'Stay quiet', sub:'Check again next Sunday',
+    d:{
+      sees:'Nothing this week.',
+      app:'The basket stays saved and is re-priced again next week.',
+      why:'Silence is a feature. It keeps alerts credible.',
+      feats:[['F15','Automatic weekly repricing','P2']],
+      risk:'The shopper can still open the app and recheck by hand any time.'
+    }},
+];
+
+const wires = [
+  { p:[[280,563],[370,563]] },
+  { p:[[560,563],[710,563]], label:'yes', at:[635,563] },
+  { p:[[465,488],[465,344]], label:'unsure', at:[465,416] },
+  { p:[[565,304],[830,304],[830,508]], label:'answered', at:[700,304] },
+  { p:[[950,563],[1040,563]] },
+  { p:[[1280,563],[1370,563]] },
+  { p:[[1610,563],[1645,563],[1645,1012],[160,1012],[160,1106]], label:'then, before the trip', at:[900,1012], out:true },
+  { p:[[280,1161],[370,1161]] },
+  { p:[[610,1161],[700,1161]] },
+  { p:[[940,1161],[1030,1161]] },
+  { p:[[1270,1161],[1360,1161]] },
+  { p:[[1550,1161],[1700,1161]], label:'yes', at:[1625,1161] },
+  { p:[[1455,1236],[1455,1380]], label:'no', at:[1455,1308] },
+  { p:[[1820,1106],[1820,450],[1160,450],[1160,508]], label:'next Sunday · back to step 3', at:[1440,450], loop:true },
+];
+
+/* ================= RENDER ================= */
+const board = document.getElementById('board');
+const svg = document.getElementById('wires');
+const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pos = (e, x, y, w, h) => { e.style.left = x+'px'; e.style.top = y+'px'; if (w) e.style.width = w+'px'; if (h) e.style.height = h+'px'; };
+
+// header
+const head = el('div','board-title',
+  '<h1>Same Basket, Cheaper</h1>'+
+  '<p>Drop in last week\'s receipt. Get the same basket cheaper.</p>'+
+  '<div class="meta">Kroger first · prices are illustrative · F-numbers match same-basket-features.md</div>');
+board.appendChild(head);
+
+frames.forEach(f => {
+  const fr = el('div','frame'); pos(fr, f.x, f.y, f.w, f.h);
+  fr.appendChild(el('div','frame-label', '<b>'+esc(f.tag)+'</b>'+esc(f.label)));
+  board.appendChild(fr);
+});
+
+// wires (drawn before nodes so nodes sit on top)
+function roundedPath(pts, r) {
+  let d = 'M'+pts[0][0]+','+pts[0][1];
+  for (let i = 1; i < pts.length; i++) {
+    const [x, y] = pts[i];
+    if (i < pts.length - 1) {
+      const [px, py] = pts[i-1], [nx, ny] = pts[i+1];
+      const l1 = Math.hypot(x-px, y-py), l2 = Math.hypot(nx-x, ny-y);
+      const rr = Math.min(r, l1/2, l2/2);
+      const ax = x - (x-px)/l1*rr, ay = y - (y-py)/l1*rr;
+      const bx = x + (nx-x)/l2*rr, by = y + (ny-y)/l2*rr;
+      d += ' L'+ax+','+ay+' Q'+x+','+y+' '+bx+','+by;
+    } else d += ' L'+x+','+y;
+  }
+  return d;
+}
+wires.forEach(w => {
+  const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+  path.setAttribute('d', roundedPath(w.p, 14));
+  path.setAttribute('fill','none');
+  path.setAttribute('stroke', w.loop ? '#d0473a' : '#394152');
+  path.setAttribute('stroke-width', w.loop ? '2.5' : '2');
+  if (w.loop) path.setAttribute('stroke-dasharray','8 6');
+  path.setAttribute('marker-end', w.loop ? 'url(#ah-loop)' : 'url(#ah)');
+  path.setAttribute('stroke-linejoin','round');
+  svg.appendChild(path);
+  if (w.label) {
+    const l = el('div','wl'+(w.loop?' loop':'')+(w.out?' out':''), esc(w.label));
+    pos(l, w.at[0], w.at[1]);
+    board.appendChild(l);
+  }
+});
+
+// nodes
+const nodeEls = {};
+const tilt = [-1.2, .8, -.5, 1.1, -.9, .6, -1, .9, -.4];
+let ti = 0;
+nodes.forEach((n, i) => {
+  const w = n.w || STEP_W, h = n.h || STEP_H;
+  let e;
+  if (n.kind === 'decision') {
+    e = el('div','node decision',
+      '<svg viewBox="0 0 190 150" preserveAspectRatio="none" aria-hidden="true"><polygon points="95,2 188,75 95,148 2,75" fill="#ffdcbd" stroke="#e0975a" stroke-width="2" stroke-linejoin="round"/></svg>'+
+      '<span>'+esc(n.title)+'</span>');
+  } else {
+    const cls = 'node ' + (n.kind === 'step' ? 'step' : 'screen') + (n.hero ? ' hero' : '') + (n.quiet ? ' quiet' : '');
+    e = el('div', cls,
+      (n.kind === 'step' ? '<span class="num">'+esc(n.n)+'</span>' : '')+
+      '<h3>'+esc(n.title)+'</h3>'+
+      '<p>'+esc(n.sub).replace(/\n/g,'<br>')+'</p>');
+  }
+  pos(e, n.x, n.y, w, h);
+  e.tabIndex = 0;
+  e.setAttribute('role','button');
+  e.setAttribute('aria-label', (n.kind==='step' ? 'Step '+n.n+': ' : '') + n.title + '. Open details');
+  e.dataset.idx = i;
+  board.appendChild(e);
+  nodeEls[n.id] = e;
+
+  if (n.sticky || n.engine) {
+    const col = el('div','col'); pos(col, n.x, n.y + h + 24);
+    if (n.sticky) {
+      const s = el('div','sticky', '<p>'+esc(n.sticky)+'</p><div class="feat">→ '+esc(n.feat)+'</div>');
+      s.style.transform = 'rotate('+tilt[ti++ % tilt.length]+'deg)';
+      col.appendChild(s);
+    }
+    if (n.engine) col.appendChild(el('div','engine','<small>Under the hood</small>'+esc(n.engine)));
+    board.appendChild(col);
+  }
+});
+
+// handwritten annotation near the hero step
+const ann = el('div','note-hand','the "aha"<br>moment');
+pos(ann, 1290, 470);
+board.appendChild(ann);
+
+// bottom cards
+const cards = [
+  { x:0, y:1640, w:520, title:'Left out of the 24-hour build', items:['Full multi-retailer catalog','Recipes and meal planning','Delivery and automated checkout','Nutrition engine'] },
+  { x:556, y:1640, w:520, title:'Verify before the pitch', items:['Kroger API registration and location prices work','What ten real baskets actually save, failures included','Stripe test checkout and returning-user access'] },
+  { x:1112, y:1640, w:520, title:'Positioning line', items:['"Upload your last grocery receipt. We rebuild the same basket cheaper, without changing what your family eats."'] },
+];
+cards.forEach(c => {
+  const e = el('div','card','<h4>'+esc(c.title)+'</h4><ul>'+c.items.map(i=>'<li>'+esc(i)+'</li>').join('')+'</ul>');
+  pos(e, c.x, c.y, c.w);
+  board.appendChild(e);
+});
+
+/* ================= PAN / ZOOM ================= */
+const vp = document.getElementById('viewport');
+const zl = document.getElementById('zlvl');
+const BW = 2000, BH = 1860;
+let s = 1, tx = 0, ty = 0;
+const apply = () => { board.style.transform = 'translate('+tx+'px,'+ty+'px) scale('+s+')'; zl.textContent = Math.round(s*100)+'%';
+  vp.style.backgroundSize = (22*s)+'px '+(22*s)+'px'; vp.style.backgroundPosition = tx+'px '+ty+'px'; };
+const clamp = v => Math.min(2.5, Math.max(0.2, v));
+function zoomAt(ns, cx, cy) { ns = clamp(ns); tx = cx - (cx - tx) * ns / s; ty = cy - (cy - ty) * ns / s; s = ns; apply(); }
+function fit() {
+  const pad = 70, w = innerWidth, h = innerHeight;
+  const top = 64, bottom = 64;
+  s = clamp(Math.min((w - pad*2) / BW, (h - top - bottom - 20) / BH));
+  tx = (w - BW*s)/2; ty = top + 10 + ((h - top - bottom - 20) - BH*s)/2;
+  apply();
+}
+document.getElementById('zin').onclick = () => zoomAt(s*1.2, innerWidth/2, innerHeight/2);
+document.getElementById('zout').onclick = () => zoomAt(s/1.2, innerWidth/2, innerHeight/2);
+document.getElementById('zfit').onclick = fit;
+
+vp.addEventListener('wheel', e => {
+  e.preventDefault();
+  if (e.ctrlKey || e.metaKey) zoomAt(s * Math.exp(-e.deltaY * 0.0022), e.clientX, e.clientY);
+  else { tx -= e.deltaX; ty -= e.deltaY; apply(); }
+}, { passive:false });
+
+let drag = null;
+const pointers = new Map();
+vp.addEventListener('pointerdown', e => {
+  pointers.set(e.pointerId, { x:e.clientX, y:e.clientY });
+  if (pointers.size === 2) { const [a,b] = [...pointers.values()]; drag = { pinch:Math.hypot(a.x-b.x,a.y-b.y), s }; return; }
+  drag = { x:e.clientX, y:e.clientY, tx, ty, moved:false, target:e.target.closest('.node') };
+  vp.setPointerCapture(e.pointerId);
+});
+vp.addEventListener('pointermove', e => {
+  if (!pointers.has(e.pointerId)) return;
+  pointers.set(e.pointerId, { x:e.clientX, y:e.clientY });
+  if (!drag) return;
+  if (drag.pinch) { const [a,b] = [...pointers.values()]; const d = Math.hypot(a.x-b.x,a.y-b.y); zoomAt(drag.s * d / drag.pinch, (a.x+b.x)/2, (a.y+b.y)/2); return; }
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  if (!drag.moved && Math.hypot(dx, dy) > 4) { drag.moved = true; vp.classList.add('dragging'); }
+  if (drag.moved) { tx = drag.tx + dx; ty = drag.ty + dy; apply(); }
+});
+const end = e => {
+  pointers.delete(e.pointerId);
+  if (drag && !drag.pinch && !drag.moved && drag.target) open(+drag.target.dataset.idx);
+  if (pointers.size === 0) drag = null;
+  vp.classList.remove('dragging');
+};
+vp.addEventListener('pointerup', end);
+vp.addEventListener('pointercancel', end);
+
+/* ================= DRAWER ================= */
+const drawer = document.getElementById('drawer');
+const body = document.getElementById('dr-body');
+let cur = -1;
+function open(i) {
+  cur = i;
+  const n = nodes[i];
+  Object.values(nodeEls).forEach(e => e.classList.remove('active'));
+  nodeEls[n.id].classList.add('active');
+  const badge = document.getElementById('dr-badge');
+  badge.className = 'dr-badge' + (n.kind === 'decision' ? ' dec' : '');
+  document.getElementById('dr-num').textContent = n.kind === 'step' ? n.n : (n.kind === 'decision' ? '?' : '•');
+  document.getElementById('dr-stage').textContent = n.kind === 'step' ? 'Step '+n.n+' · '+n.stage : n.stage;
+  document.getElementById('dr-title').textContent = n.title;
+  const d = n.d;
+  body.innerHTML =
+    '<div class="dr-sec"><h5><i style="background:var(--step);border:1px solid var(--step-line)"></i>What the shopper sees</h5><p>'+esc(d.sees)+'</p></div>'+
+    '<div class="dr-sec"><h5><i style="background:var(--engine);border:1px dashed var(--engine-line)"></i>What the app does</h5><p>'+esc(d.app)+'</p></div>'+
+    '<div class="dr-sec"><h5><i style="background:var(--sticky)"></i>Why it\'s built this way</h5><p>'+esc(d.why)+'</p></div>'+
+    '<div class="dr-sec"><h5>Features this step needs</h5><div class="dr-feats">'+
+      d.feats.map(f => '<div class="dr-feat"><code>'+esc(f[0])+'</code><span>'+esc(f[1])+'</span><em>'+esc(f[2])+'</em></div>').join('')+
+    '</div></div>'+
+    '<div class="dr-sec"><h5>Watch out</h5><div class="dr-risk">'+esc(d.risk)+'</div></div>';
+  body.scrollTop = 0;
+  document.getElementById('dr-pos').textContent = (i+1)+' / '+nodes.length;
+  document.getElementById('dr-prev').disabled = i === 0;
+  document.getElementById('dr-next').disabled = i === nodes.length - 1;
+  drawer.classList.add('open');
+  drawer.setAttribute('aria-hidden','false');
+  centerOn(n);
+}
+function close() {
+  drawer.classList.remove('open'); drawer.setAttribute('aria-hidden','true');
+  Object.values(nodeEls).forEach(e => e.classList.remove('active')); cur = -1;
+}
+function centerOn(n) {
+  // keep the selected node visible beside the drawer
+  const narrow = innerWidth <= 720;
+  const availW = narrow ? innerWidth : innerWidth - Math.min(400, innerWidth);
+  const availH = narrow ? innerHeight * 0.28 : innerHeight;
+  const cx = (n.x + (n.w||STEP_W)/2) * s + tx, cy = (n.y + (n.h||STEP_H)/2) * s + ty;
+  if (cx < 40 || cx > availW - 40 || cy < 70 || cy > availH - 40) {
+    tx += availW/2 - cx; ty += (narrow ? availH/2 + 20 : availH/2) - cy; apply();
+  }
+}
+document.getElementById('dr-close').onclick = close;
+document.getElementById('dr-prev').onclick = () => cur > 0 && open(cur - 1);
+document.getElementById('dr-next').onclick = () => cur < nodes.length - 1 && open(cur + 1);
+document.getElementById('walk').onclick = () => open(0);
+
+document.addEventListener('keydown', e => {
+  if (e.target.closest && e.target.closest('.node') && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); open(+e.target.dataset.idx); return; }
+  if (e.key === 'Escape') close();
+  else if (e.key === 'ArrowRight' && cur >= 0) document.getElementById('dr-next').click();
+  else if (e.key === 'ArrowLeft' && cur >= 0) document.getElementById('dr-prev').click();
+  else if ((e.key === 'f' || e.key === 'F') && !e.metaKey && !e.ctrlKey) fit();
+  else if ((e.key === '=' || e.key === '+')) zoomAt(s*1.2, innerWidth/2, innerHeight/2);
+  else if (e.key === '-') zoomAt(s/1.2, innerWidth/2, innerHeight/2);
+});
+
+addEventListener('resize', fit);
+fit();
+})();
+</script>
+</body>
+</html>

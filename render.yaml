@@ -1,0 +1,28 @@
+# Render Blueprint: one web service serves the built app AND the Kroger proxy from the same origin.
+# Secrets are marked `sync: false`: Render asks for them in the dashboard and they are never stored in git.
+services:
+  - type: web
+    name: pro-groceries
+    runtime: node
+    plan: free                       # free instances sleep when idle (first visit after a pause takes ~1 min); use "starter" for the demo day
+    buildCommand: npm run build      # installs app dependencies (including dev) and builds app/dist
+    startCommand: npm start          # node server/index.mjs
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      # Build-time: tells the app where its Kroger proxy lives (same origin, so no CORS).
+      - key: VITE_KROGER_PROXY_BASE
+        value: /__kroger
+      # Run-time secrets for the proxy. Set these in the Render dashboard; never commit them.
+      - key: KROGER_CLIENT_ID
+        sync: false
+      - key: KROGER_CLIENT_SECRET
+        sync: false
+      - key: KROGER_SCOPE
+        value: product.compact
+      # Build-time, public values: Stripe test-mode Payment Links.
+      - key: VITE_STRIPE_PAYMENT_LINK
+        sync: false
+      - key: VITE_STRIPE_PAYMENT_LINK_MONTHLY
+        sync: false

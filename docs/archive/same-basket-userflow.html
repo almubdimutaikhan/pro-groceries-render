@@ -1,0 +1,871 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pro Groceries — MVP user flow</title>
+<style>
+:root{font-family:Inter,Arial,Helvetica,sans-serif;color:#292b32;background:#f6f6f8;font-synthesis:none}*{box-sizing:border-box}body{margin:0}button{font:inherit;cursor:pointer}button:focus-visible,a:focus-visible,[role=button]:focus-visible{outline:3px solid #4262ff;outline-offset:4px}.topbar{height:80px;background:white;border-bottom:1px solid #e5e5e9;display:flex;align-items:center;justify-content:space-between;padding:0 26px;gap:20px}.identity{display:flex;align-items:center;gap:14px}.mark{height:36px;width:36px;background:#eff3dc;border:1px solid #dce4b9;border-radius:9px;display:grid;place-items:center;color:#536431;font:24px Georgia,serif}.identity h1{font-size:17px;letter-spacing:-.4px;margin:0 0 5px;font-weight:600}.identity p{font-size:12px;color:#777985;margin:0}.top-actions{display:flex;gap:8px;align-items:center}.top-actions a,.top-actions button{font-size:12px;border:1px solid #dedee5;background:white;color:#42444e;border-radius:7px;padding:9px 12px;text-decoration:none}.status{font-size:11px;color:#737782;margin-right:10px}.layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;height:calc(100vh - 80px)}.canvas{position:relative;overflow:hidden;touch-action:none;background-color:#fafafc;background-image:radial-gradient(#d9dbe2 .9px,transparent .9px);background-size:22px 22px;cursor:grab}.canvas.dragging{cursor:grabbing}.canvas>svg{display:block;width:100%;height:100%;user-select:none}.board-meta{max-width:calc(100% - 40px);flex-wrap:wrap;position:absolute;top:18px;left:20px;display:flex;gap:6px;z-index:2}.chip{padding:7px 10px;border:1px solid #e1e2e8;background:#fff;border-radius:6px;font-size:11px;color:#6a6c78}.help{position:absolute;bottom:22px;left:22px;color:#757986;font-size:11px;background:#fafafce8;padding:7px 10px;border-radius:5px}.zoom{position:absolute;bottom:22px;right:22px;display:flex;align-items:center;background:white;border:1px solid #dddfe6;box-shadow:0 3px 12px #25273b0a;border-radius:8px;overflow:hidden}.zoom button{border:0;background:white;min-height:38px;min-width:38px;color:#494c57;font-size:19px}.zoom button:hover{background:#f1f2f7}.zoom .fit{font-size:12px;padding:0 12px;border-left:1px solid #e4e5eb}.zoom output{font-size:11px;min-width:44px;text-align:center}.panel{background:white;border-left:1px solid #e4e5eb;overflow:auto;padding:25px 22px}.kicker{text-transform:uppercase;font-size:10px;letter-spacing:1.3px;color:#868995;margin:0 0 13px}.stepnum{font-size:12px;color:#536b43;padding:5px 8px;background:#eff5e9;border-radius:4px;display:inline-block;margin-bottom:14px}.panel h2{font-size:22px;line-height:1.2;letter-spacing:-.5px;font-weight:550;margin:0 0 15px}.panel p{font-size:13px;line-height:1.65;color:#676b77;margin:0 0 22px}.panel h3{font-size:11px;text-transform:uppercase;letter-spacing:.8px;font-weight:600;margin:22px 0 10px}.panel ul{padding:0 0 0 17px;margin:0;color:#646976;font-size:12px;line-height:1.8}.panel hr{border:0;border-top:1px solid #eeeff3;margin:23px 0}.legend{display:grid;gap:11px}.legend div{display:flex;align-items:center;gap:10px;font-size:11px;color:#737783}.swatch{width:16px;height:12px;border-radius:3px;border:1px solid #cbd9ef;background:#eaf2ff}.swatch.agent{background:#eae4ff;border-color:#b8a4ed}.swatch.database{background:#e3f3f2;border-color:#91bdb9}.swatch.system{background:white;border-color:#d9dce3}.swatch.decision{background:#fff2c8;border-color:#dbc36b;transform:rotate(45deg);width:11px;height:11px;margin:0 3px}.swatch.success{background:#e7f1e3;border-color:#afc7a2}.swatch.future{background:#f4edff;border-color:#c3afd8;border-style:dashed}.footnote{margin-top:25px;font-size:10px;color:#969aa4;line-height:1.7}.node{cursor:pointer}.node .shape{stroke-width:1.3;transition:stroke .12s,filter .12s}.node:hover .shape{stroke:#7586ac;stroke-width:2}.node.selected .shape{stroke:#4262ff;stroke-width:2.4;filter:drop-shadow(0 2px 4px #4262ff1b)}.node text{pointer-events:none;fill:#333845;font-size:14px;font-weight:500}.node .small{fill:#7a8090;font-size:10px;font-weight:400}.node .number{fill:#717a8d;font-size:10px;font-weight:400}.edge{stroke:#a6abb8;stroke-width:1.5;fill:none;stroke-linejoin:round;stroke-linecap:round}.edge.optional{stroke-dasharray:5 5;stroke:#b2a5c4}.edge.return{stroke:#9eae94;stroke-dasharray:6 5}.edge-label text{font-size:10px;fill:#747a88}.phase-title{font-size:13px;font-weight:600;fill:#565d6c;letter-spacing:1px}.phase-sub{font-size:11px;fill:#8b90a0}.phase-line{stroke:#e1e3eb;stroke-width:1;stroke-dasharray:4 7}.note-text{font-size:11px;fill:#797e8a}.sticky{fill:#fff8dc;stroke:#ebe0ac;stroke-width:1}.sticky-title{font-size:11px;font-weight:600;fill:#7e744e}.sticky-copy{font-size:11px;fill:#8d8263}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}@media(max-width:900px){.layout{grid-template-columns:minmax(0,1fr) 250px}.panel{padding:20px 17px}.status{display:none}.topbar{padding:0 16px}}@media(max-width:620px){.layout{display:flex;flex-direction:column;height:auto}.canvas{height:65vh;min-height:410px}.panel{border-left:0;border-top:1px solid #e4e5eb;max-height:none}.topbar{height:76px}.identity h1{font-size:14px}.identity p{font-size:10px}.top-actions a,.top-actions .print{display:none}.board-meta{top:12px;left:12px}.chip{font-size:10px}.help{bottom:65px;left:8px;font-size:10px}.panel .legend{grid-template-columns:1fr 1fr}.panel h2{font-size:20px}}@media print{.topbar{height:auto;padding:10px}.layout{display:block;height:auto}.panel,.board-meta,.help,.zoom,.top-actions{display:none}.canvas{width:100%;height:900px;background:white}.canvas>svg{height:900px}.node.selected .shape{stroke:#8b96a8;stroke-width:1.3}@page{size:A3 landscape;margin:8mm}}
+</style>
+</head>
+<body>
+<div role="note" style="position:sticky;top:0;z-index:9999;padding:10px 16px;background:#FFF4D6;color:#3C2A1E;font:600 14px/1.4 system-ui,sans-serif;border-bottom:2px solid #FFB800">SUPERSEDED. Kept for history only: this board describes an earlier design and no longer matches the app. See README.md and SYSTEM.md.</div>
+<header class="topbar"><div class="identity"><div class="mark" aria-hidden="true">b.</div><div><h1>Pro Groceries</h1><p>Product journey / Voice everywhere / direct prices + household history</p></div></div><div class="top-actions"><span class="status">MVP flow · v5</span><a href="pro-groceries-features.md">Feature spec ↗</a><button class="print" id="print">Print board</button></div></header>
+<main class="layout">
+<section class="canvas" id="canvas" aria-label="Interactive flow board. Drag to pan, use zoom buttons, and click nodes for explanations.">
+<div class="board-meta"><span class="chip">USER FLOW</span><button class="chip" data-focus="core">Profile & basket</button><button class="chip" data-focus="retention">Save & return</button><button class="chip" data-focus="payment">Optional payment</button></div>
+<svg id="board" xmlns="http://www.w3.org/2000/svg" aria-labelledby="board-title board-desc"><title id="board-title">Same Basket, Cheaper user flow</title><desc id="board-desc">Six-feature MVP: confirm a basket, automatically choose eligible swaps, lock exceptions, copy the list, save locally and reprice. Payment is a separate optional branch.</desc><defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 1 1 L 9 5 L 1 9" fill="none" stroke="#a6abb8" stroke-width="1.4"/></marker></defs><g id="world"><g id="frames"></g><g id="edges"></g><g id="nodes"></g></g></svg>
+<div class="help">Drag to move · scroll to zoom · select a step</div><div class="zoom" aria-label="Board zoom"><button id="minus" aria-label="Zoom out">−</button><output id="zoom-label">100%</output><button id="plus" aria-label="Zoom in">+</button><button id="fit" class="fit">Fit</button></div>
+</section>
+<aside class="panel" aria-label="Selected step explanation"><p class="kicker">Step details</p><span class="stepnum" id="detail-number">Start here</span><h2 id="detail-title">Same basket.<br>Lower price.</h2><p id="detail-copy">Follow the arrows to explore the journey. Select any step to see what the shopper does, what the product delivers, and how the flow handles uncertainty.</p><h3 id="detail-heading">Design principles</h3><ul id="detail-list"><li>First useful result without an account.</li><li>Changes always stay under user control.</li><li>Actual spending and estimates stay separate.</li></ul><hr><p class="kicker">Board key</p><div class="legend"><div><i class="swatch database"></i>User time-series DB</div><div><i class="swatch agent"></i>AI agent action</div><div><i class="swatch"></i>User action</div><div><i class="swatch system"></i>System action</div><div><i class="swatch decision"></i>Decision / branch</div><div><i class="swatch success"></i>Useful outcome</div><div><i class="swatch future"></i>Conditional / later</div></div><div class="footnote">This board describes the proposed experience. It does not connect to retailer services or charge a payment. Every step supports text/voice input and optional spoken readout. Microphone use is user-initiated. This board describes integrations; it does not call the APIs. Database links are dashed; payment remains P1.</div></aside>
+</main>
+<script>
+(()=>{
+const NS='http://www.w3.org/2000/svg';
+const canvas=document.getElementById('canvas'),world=document.getElementById('world');
+const nodes=[
+ {
+  "id": "start",
+  "x": 150,
+  "y": 170,
+  "type": "success",
+  "num": "START",
+  "lines": [
+   "Open production URL",
+   "Voice + text available"
+  ],
+  "title": "Start an anonymous session",
+  "copy": "Open the app without a sign-up form. The server restores a secure anonymous session or creates one to associate this household’s data over time.",
+  "points": [
+   "Voice input and spoken prompts are available throughout, alongside text.",
+   "A new browser/device cannot recover the same history without an explicit recovery mechanism.",
+   "Do not record audio until the shopper initiates it."
+  ]
+ },
+ {
+  "id": "input",
+  "x": 410,
+  "y": 170,
+  "type": "user",
+  "num": "01 · PROFILE",
+  "lines": [
+   "Where in the US?",
+   "Household preferences"
+  ],
+  "title": "Locate and understand the household",
+  "copy": "Ask for US city/state or ZIP, preferred store, age range, household/family size and lifestyle parameters that affect the basket. Save confirmed fields against the anonymous household session.",
+  "points": [
+   "Required for pricing: US location and an actual supported store.",
+   "Optional: age range, adults/children, budget, shopping frequency, cooking habits, pack/storage preferences, diet and brand locks.",
+   "Prefer household size over collecting marital status. Exact birth date and street address are unnecessary.",
+   "User-stated preferences guide shopping; age or lifestyle never overrides explicit quantity or dietary constraints.",
+   "Accept spoken answers, show the transcript, and let the user correct or skip optional fields."
+  ]
+ },
+ {
+  "id": "parse",
+  "x": 670,
+  "y": 170,
+  "type": "system",
+  "num": "02 · LIST",
+  "lines": [
+   "Speak / paste list",
+   "Parse editable items"
+  ],
+  "title": "Enter the list in the easiest way",
+  "copy": "Type or speak the grocery list. MangiSoz transcribes speech; OpenRouter parses the confirmed text into descriptions, quantities, brands and variants.",
+  "points": [
+   "Keep the visible transcript editable.",
+   "Speech uncertainty around brands, units or numbers requires clarification.",
+   "The AI never creates product prices.",
+   "Read prompts or a concise basket summary aloud on request."
+  ]
+ },
+ {
+  "id": "store",
+  "x": 930,
+  "y": 170,
+  "type": "decision",
+  "num": "03 · F02",
+  "lines": [
+   "Supported branch",
+   "for saved location?"
+  ],
+  "title": "Choose the exact Kroger branch",
+  "copy": "Use the confirmed profile location to retrieve supported branches directly. The shopper selects the branch; store the association and effective time in the database.",
+  "points": [
+   "A city or ZIP alone does not establish the branch price.",
+   "Fetch prices directly from the retailer for each new comparison/reprice.",
+   "The session stays usable without a registration screen."
+  ]
+ },
+ {
+  "id": "store-error",
+  "x": 930,
+  "y": 330,
+  "type": "user",
+  "num": "RECOVERY",
+  "lines": [
+   "Change ZIP / store",
+   "or retry lookup"
+  ],
+  "title": "Recover without losing the list",
+  "copy": "Show unsupported coverage or a lookup error honestly. Let the shopper choose another supported branch or retry.",
+  "points": [
+   "Never substitute generated prices.",
+   "Do not expose retailer credentials."
+  ]
+ },
+ {
+  "id": "match",
+  "x": 1190,
+  "y": 170,
+  "type": "system",
+  "num": "04 · MATCH",
+  "lines": [
+   "Fetch candidates",
+   "Match original items"
+  ],
+  "title": "Establish the original basket",
+  "copy": "Retrieve current product candidates and original-product prices directly from the selected retailer. Confirm missing product identity only where ambiguous; do not ask users to enter prices as a required step.",
+  "points": [
+   "Brand/size/variant ambiguity remains editable by voice or text.",
+   "Record product, branch, source and retrieval time in the database.",
+   "Unpriced or unmatched entries remain visible, with coverage."
+  ]
+ },
+ {
+  "id": "confirmed",
+  "x": 1450,
+  "y": 170,
+  "type": "decision",
+  "num": "04A · OPTIONAL INPUT",
+  "lines": [
+   "User supplied",
+   "initial prices?"
+  ],
+  "title": "Show block 05 only when initial prices exist",
+  "copy": "If the shopper supplied original prices or a previous receipt, show block 05 to check those references. If no initial prices were supplied, skip that block and use retailer-fetched current prices.",
+  "points": [
+   "Initial prices are optional, not an onboarding requirement.",
+   "No user-entered price form is forced onto a list-only shopper.",
+   "Current original and replacement prices must still share the same retailer context."
+  ]
+ },
+ {
+  "id": "clarify",
+  "x": 1450,
+  "y": 330,
+  "type": "user",
+  "num": "05 · IF PRICES EXIST",
+  "lines": [
+   "Check supplied",
+   "initial prices"
+  ],
+  "title": "Confirm the supplied reference",
+  "copy": "Only when initial prices were provided, confirm amounts, product matches, store and date through text or voice. Historical prices remain reference observations.",
+  "points": [
+   "A receipt price is historical spend, not necessarily today’s baseline.",
+   "Use today’s directly fetched original-versus-alternative prices for substitution savings.",
+   "Corrections are versioned; unknown prices do not become zero."
+  ]
+ },
+ {
+  "id": "engine",
+  "x": 1450,
+  "y": 550,
+  "type": "system",
+  "num": "06 · F04",
+  "lines": [
+   "Fetch equivalents",
+   "Normalize quantities"
+  ],
+  "title": "Check strict equivalence",
+  "copy": "Search candidates and normalize comparable units. Calculate integer package counts for every pack size, including changes within 10%.",
+  "points": [
+   "Preserve type, known variant and required amount.",
+   "Profile preferences are constraints only when explicitly stated.",
+   "Unknown required attributes mean no swap.",
+   "Money calculations use directly retrieved retailer records and deterministic code."
+  ]
+ },
+ {
+  "id": "eligible",
+  "x": 1190,
+  "y": 550,
+  "type": "decision",
+  "num": "07 · F04",
+  "lines": [
+   "Valid lower checkout",
+   "cost available?"
+  ],
+  "title": "Choose by actual basket cost",
+  "copy": "Compare supported eligible prices for the amount requested. A better unit price alone is insufficient.",
+  "points": [
+   "Do not use unconfirmed loyalty discounts in the standard total.",
+   "Exclude bundles and coupon combinations.",
+   "No claim of a catalog-wide global minimum."
+  ]
+ },
+ {
+  "id": "original",
+  "x": 1190,
+  "y": 720,
+  "type": "system",
+  "num": "NO SAVING",
+  "lines": [
+   "Keep original product",
+   "No saving invented"
+  ],
+  "title": "Keeping the original is correct",
+  "copy": "Retain the original when no eligible candidate reduces the required checkout cost.",
+  "points": [
+   "Never reduce quantity to claim a saving.",
+   "A fully unchanged basket can return zero."
+  ]
+ },
+ {
+  "id": "choose",
+  "x": 930,
+  "y": 550,
+  "type": "system",
+  "num": "08 · F04",
+  "lines": [
+   "Automatically choose",
+   "valid cheaper swaps"
+  ],
+  "title": "The product does the choosing",
+  "copy": "Apply valid replacements by default under the strict same-basket rules. Preserve any previously saved product locks.",
+  "points": [
+   "This is deterministic choice, not an LLM price decision.",
+   "The shopper can inspect and reverse every change.",
+   "No separate agent-permission setup in the MVP."
+  ]
+ },
+ {
+  "id": "result",
+  "x": 670,
+  "y": 550,
+  "type": "success",
+  "num": "09 · F05",
+  "lines": [
+   "Same basket, $X less",
+   "Show totals & coverage"
+  ],
+  "title": "Make the result inspectable",
+  "copy": "Show both estimated totals, percent reduction and all changes sorted by dollar impact. Separate unchanged and unsupported items.",
+  "points": [
+   "Same store and price snapshot.",
+   "Show original and replacement sizes and prices.",
+   "Footer: retrieval time, estimate before tax, shelf prices may change."
+  ]
+ },
+ {
+  "id": "lock",
+  "x": 410,
+  "y": 550,
+  "type": "user",
+  "num": "10 · F05",
+  "lines": [
+   "Keep original / lock",
+   "Voice or text edits"
+  ],
+  "title": "Control the exceptions",
+  "copy": "Say or type Keep my usual coffee, or use the lock control. Confirm ambiguous product references, then recompute totals and save a new basket version.",
+  "points": [
+   "The displayed and spoken dollar values come from engine output.",
+   "A correction changes this basket; save a continuing preference only when intended.",
+   "Stale responses cannot overwrite a later edit."
+  ]
+ },
+ {
+  "id": "list",
+  "x": 150,
+  "y": 550,
+  "type": "success",
+  "num": "11 · F06",
+  "lines": [
+   "Copy / share",
+   "final shopping list"
+  ],
+  "title": "Leave with a usable list",
+  "copy": "Show products, brands, pack sizes, counts and available prices in a mobile checklist. Copy/export is the core handoff.",
+  "points": [
+   "Include unchanged products.",
+   "This does not purchase groceries."
+  ]
+ },
+ {
+  "id": "shop",
+  "x": 150,
+  "y": 720,
+  "type": "user",
+  "num": "12 · F06",
+  "lines": [
+   "Shop at the store",
+   "Use the checklist"
+  ],
+  "title": "Complete the real-world shop",
+  "copy": "The shopper buys groceries separately at the retailer. Prices and stock may differ from the displayed snapshot.",
+  "points": [
+   "The app does not know actual purchases automatically.",
+   "No receipt upload is required."
+  ]
+ },
+ {
+  "id": "mark",
+  "x": 410,
+  "y": 720,
+  "type": "user",
+  "num": "13 · SHOPPING EVENT",
+  "lines": [
+   "Send photo / voice",
+   "Review and mark shop"
+  ],
+  "title": "Mark the shopping occasion by photo or voice",
+  "copy": "Send a receipt photo, speak I shopped this, or use the text/button alternative. OCR or transcription creates a draft event linked to a basket version; the shopper confirms it before counting.",
+  "points": [
+   "A voice statement is self-report. A receipt supplies observed paid amounts only for matched items.",
+   "Show extracted items, amounts and date for correction.",
+   "An unrelated photo does not prove a purchase.",
+   "Photo, voice and button reports of the same occasion are deduplicated.",
+   "Do not silently replace estimated savings with actual spending."
+  ]
+ },
+ {
+  "id": "counter",
+  "x": 670,
+  "y": 720,
+  "type": "success",
+  "num": "14 · F06",
+  "lines": [
+   "Update estimated",
+   "savings counter"
+  ],
+  "title": "Deduplicate the estimate",
+  "copy": "Update the server-side estimated counter once for a confirmed shopping occasion, preserving its basket version, source and timestamps.",
+  "points": [
+   "Idempotent event writes prevent repeat voice/photo submissions from double counting.",
+   "Receipt-confirmed spending and estimated substitution reduction remain separate series.",
+   "Use the household’s stored week/time-zone convention."
+  ]
+ },
+ {
+  "id": "save",
+  "x": 150,
+  "y": 980,
+  "type": "system",
+  "num": "15 · F06",
+  "lines": [
+   "Save to user DB",
+   "Versions + timestamps"
+  ],
+  "title": "Persist user history over time",
+  "copy": "Persist profile revisions, immutable basket versions, direct price observations, user edits and confirmed shopping events in a household-scoped database. The browser may retain UI drafts, but is not the source of truth.",
+  "points": [
+   "Server checks session ownership for every record.",
+   "Every event has occurred_at and recorded_at timestamps.",
+   "Current preferences are derived from explicit revisions.",
+   "Let the user view and delete their data."
+  ]
+ },
+ {
+  "id": "return",
+  "x": 410,
+  "y": 980,
+  "type": "user",
+  "num": "16 · EDIT",
+  "lines": [
+   "Edit basket",
+   "Voice or text"
+  ],
+  "title": "Edit the saved basket on return",
+  "copy": "Load the household’s last basket and accept text or voice commands such as Remove eggs, make milk two gallons, keep my coffee. Parse a draft patch, confirm ambiguity, save a new version and reprice.",
+  "points": [
+   "Read back consequential quantity or product changes when needed.",
+   "Keep previous versions for the time series.",
+   "New edits trigger fresh retailer price retrieval.",
+   "A preference update does not authorize grocery purchases."
+  ]
+ },
+ {
+  "id": "refresh",
+  "x": 670,
+  "y": 980,
+  "type": "system",
+  "num": "17 · F02/F06",
+  "lines": [
+   "Fetch current prices",
+   "Direct retailer request"
+  ],
+  "title": "Fetch new prices directly",
+  "copy": "Call the retailer for current relevant product prices on each explicit reprice/new comparison. Record responses as timestamped observations, not a cache used as today’s live data.",
+  "points": [
+   "In-request deduplication and rate limits are allowed.",
+   "OAuth token caching is separate from product-price retrieval.",
+   "Historical observations are available for history, never silently substituted for current results."
+  ]
+ },
+ {
+  "id": "refresh-ok",
+  "x": 930,
+  "y": 980,
+  "type": "decision",
+  "num": "18",
+  "lines": [
+   "Price check",
+   "successful?"
+  ],
+  "title": "Do not hide a failed refresh",
+  "copy": "If retrieval fails or coverage changes, show the issue and preserve the previous labelled estimate.",
+  "points": [
+   "Offer retry.",
+   "Previously cached data keeps its original timestamp."
+  ]
+ },
+ {
+  "id": "refresh-error",
+  "x": 930,
+  "y": 1150,
+  "type": "user",
+  "num": "RECOVERY",
+  "lines": [
+   "Price fetch failed",
+   "Retry / view history"
+  ],
+  "title": "Preserve context during errors",
+  "copy": "If fresh retrieval fails, show the failure. The shopper may inspect a historical snapshot labelled with its original date, but it cannot appear as a successful current comparison.",
+  "points": [
+   "Keep the database-backed basket and locks intact.",
+   "No new saving or shopping event is recorded by a failed lookup."
+  ]
+ },
+ {
+  "id": "rerun",
+  "x": 1190,
+  "y": 980,
+  "type": "system",
+  "num": "19 · F03/F04",
+  "lines": [
+   "Revalidate matches",
+   "Run swap engine"
+  ],
+  "title": "Recheck the same rules",
+  "copy": "Use freshly retrieved prices, confirmed baseline identities, household constraints and locks. Resolve any changed or missing product identity before comparing.",
+  "points": [
+   "Preserve user edits and basket version.",
+   "Block 05 is still skipped when no initial price reference was supplied.",
+   "Show missing data rather than estimating a price."
+  ]
+ },
+ {
+  "id": "updated",
+  "x": 1450,
+  "y": 980,
+  "type": "success",
+  "num": "20 · F05",
+  "lines": [
+   "Updated basket",
+   "Inspect / lock / shop"
+  ],
+  "title": "A new comparison, not new realized savings",
+  "copy": "Produce the result for this price check. Let the shopper inspect, lock or copy it again.",
+  "points": [
+   "Only I shopped this can add a counter entry.",
+   "The same session cannot be counted repeatedly."
+  ]
+ },
+ {
+  "id": "offer",
+  "x": 410,
+  "y": 1400,
+  "type": "future",
+  "num": "P1 · F07",
+  "lines": [
+   "Optional $5.99/mo",
+   "Offer after value"
+  ],
+  "title": "Payment is conditional scope",
+  "copy": "Show the proposed monthly price after the free result. Build checkout only after P0 passes, and define a paid benefit beyond the free repricing/history first.",
+  "points": [
+   "Price remains a hypothesis.",
+   "Profile, voice and database history are not silently paywalled by this flow change.",
+   "Resolve free/paid benefit overlap before implementing checkout."
+  ]
+ },
+ {
+  "id": "checkout",
+  "x": 670,
+  "y": 1400,
+  "type": "future",
+  "num": "P1 · F07",
+  "lines": [
+   "Stripe checkout",
+   "Clearly labelled test mode"
+  ],
+  "title": "Pay for the app service",
+  "copy": "If implemented, create a server-side checkout session for the disclosed app subscription and send the shopper to hosted checkout.",
+  "points": [
+   "This does not pay for groceries.",
+   "A failed/cancelled checkout preserves the free basket."
+  ]
+ },
+ {
+  "id": "paid",
+  "x": 930,
+  "y": 1400,
+  "type": "decision",
+  "num": "P1 · F07",
+  "lines": [
+   "Payment confirmed",
+   "server-side?"
+  ],
+  "title": "Verify payment independently",
+  "copy": "A redirect or local browser flag is not proof of subscription. Verify payment and bind access to a recoverable server-backed record.",
+  "points": [
+   "Authenticate any entitlement token server-side.",
+   "Process repeated webhook events idempotently.",
+   "Scope includes cancellation if a renewing subscription is offered."
+  ]
+ },
+ {
+  "id": "access",
+  "x": 1190,
+  "y": 1400,
+  "type": "future",
+  "num": "P1 · F07",
+  "lines": [
+   "Unlock implemented",
+   "paid benefit"
+  ],
+  "title": "Deliver only what was sold",
+  "copy": "Grant the implemented entitlement after verification. Payment remains outside the mandatory no-login grocery flow.",
+  "points": [
+   "Resolve the free-versus-paid overlap before launch.",
+   "Do not sell unbuilt scheduling as already available."
+  ]
+ },
+ {
+  "id": "retry",
+  "x": 930,
+  "y": 1570,
+  "type": "user",
+  "num": "P1 RECOVERY",
+  "lines": [
+   "Retry / cancel",
+   "Keep free result"
+  ],
+  "title": "Payment failure never deletes the list",
+  "copy": "Show an honest pending or failed state. Allow retry or return to the existing free shopping result.",
+  "points": [
+   "Do not unlock from the success URL alone."
+  ]
+ },
+ {
+  "id": "timeline-db",
+  "x": 1450,
+  "y": 720,
+  "type": "database",
+  "num": "PERSISTENT DATA",
+  "lines": [
+   "Household time-series DB",
+   "Profile · prices · events"
+  ],
+  "title": "Store a history, not just the latest total",
+  "copy": "Recommended storage: Supabase Postgres, with temporary private media storage for uploaded receipts/audio. No time-series extension is needed for this MVP.",
+  "points": [
+   "Profile revisions: location, household preferences and effective timestamps.",
+   "Basket versions: items, counts, locks and edit source.",
+   "Price observations: branch/product/pack, actual returned prices and retrieval time.",
+   "Shopping events: self-report or receipt evidence, confirmed values and idempotency key.",
+   "Deleting raw media does not erase the confirmed structured observation unless the user requests deletion."
+  ]
+ }
+];
+const edges=[
+ [
+  "start",
+  "input",
+  "M240 170H320"
+ ],
+ [
+  "input",
+  "parse",
+  "M500 170H580"
+ ],
+ [
+  "parse",
+  "store",
+  "M760 170H850"
+ ],
+ [
+  "store",
+  "match",
+  "M1010 170H1100",
+  "Yes",
+  1055,
+  152
+ ],
+ [
+  "store",
+  "store-error",
+  "M930 226V290",
+  "No / error",
+  978,
+  264
+ ],
+ [
+  "store-error",
+  "store",
+  "M840 330H810V85H930V114",
+  "Retry",
+  848,
+  85
+ ],
+ [
+  "match",
+  "confirmed",
+  "M1280 170H1370"
+ ],
+ [
+  "confirmed",
+  "clarify",
+  "M1450 226V290",
+  "Yes",
+  1469,
+  264
+ ],
+ [
+  "clarify",
+  "engine",
+  "M1450 370V510",
+  "Continue",
+  1490,
+  445
+ ],
+ [
+  "confirmed",
+  "engine",
+  "M1530 170H1585V550H1540",
+  "No · skip 05",
+  1575,
+  360
+ ],
+ [
+  "engine",
+  "eligible",
+  "M1360 550H1270"
+ ],
+ [
+  "eligible",
+  "choose",
+  "M1110 550H1020",
+  "Yes",
+  1064,
+  532
+ ],
+ [
+  "eligible",
+  "original",
+  "M1190 606V680",
+  "No",
+  1208,
+  648
+ ],
+ [
+  "original",
+  "result",
+  "M1100 720H785V550H760"
+ ],
+ [
+  "choose",
+  "result",
+  "M840 550H760"
+ ],
+ [
+  "result",
+  "lock",
+  "M580 550H500"
+ ],
+ [
+  "lock",
+  "result",
+  "M410 590V635H670V590",
+  "Recalculate",
+  535,
+  652
+ ],
+ [
+  "lock",
+  "list",
+  "M320 550H240"
+ ],
+ [
+  "list",
+  "shop",
+  "M150 590V680"
+ ],
+ [
+  "shop",
+  "mark",
+  "M240 720H320"
+ ],
+ [
+  "mark",
+  "counter",
+  "M500 720H580"
+ ],
+ [
+  "list",
+  "save",
+  "M60 550H30V980H60",
+  "Stored locally",
+  48,
+  848
+ ],
+ [
+  "save",
+  "return",
+  "M240 980H320"
+ ],
+ [
+  "return",
+  "refresh",
+  "M500 980H580"
+ ],
+ [
+  "refresh",
+  "refresh-ok",
+  "M760 980H850"
+ ],
+ [
+  "refresh-ok",
+  "rerun",
+  "M1010 980H1100",
+  "Yes",
+  1056,
+  962
+ ],
+ [
+  "refresh-ok",
+  "refresh-error",
+  "M930 1036V1110",
+  "No",
+  949,
+  1083
+ ],
+ [
+  "refresh-error",
+  "refresh",
+  "M840 1150H670V1020",
+  "Retry",
+  740,
+  1132
+ ],
+ [
+  "rerun",
+  "updated",
+  "M1280 980H1360"
+ ],
+ [
+  "updated",
+  "result",
+  "M1540 980H1620V415H670V510",
+  "New result",
+  1500,
+  415,
+  "return"
+ ],
+ [
+  "save",
+  "offer",
+  "M150 1020V1400H320",
+  "Optional after value",
+  187,
+  1290,
+  "optional"
+ ],
+ [
+  "offer",
+  "checkout",
+  "M500 1400H580",
+  "",
+  "",
+  "",
+  "optional"
+ ],
+ [
+  "checkout",
+  "paid",
+  "M760 1400H850",
+  "",
+  "",
+  "",
+  "optional"
+ ],
+ [
+  "paid",
+  "access",
+  "M1010 1400H1100",
+  "Yes",
+  1057,
+  1382,
+  "optional"
+ ],
+ [
+  "paid",
+  "retry",
+  "M930 1456V1530",
+  "No / pending",
+  988,
+  1498,
+  "optional"
+ ],
+ [
+  "retry",
+  "checkout",
+  "M840 1570H670V1440",
+  "Retry",
+  744,
+  1551,
+  "optional"
+ ],
+ [
+  "input",
+  "timeline-db",
+  "M500 170H535V40H1660V720H1540",
+  "Store profile",
+  1595,
+  87,
+  "optional"
+ ],
+ [
+  "save",
+  "timeline-db",
+  "M150 1020V1250H1660V720H1540",
+  "Append timestamped records",
+  1467,
+  1232,
+  "optional"
+ ]
+];
+function el(tag,attrs={},text){const e=document.createElementNS(NS,tag);Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v));if(text!==undefined)e.textContent=text;return e;}
+const frames=document.getElementById('frames');
+[[60, "01  UNDERSTAND THE BASKET · F01–F03", "US location + household profile → speak/paste list → direct prices; block 05 is conditional"], [440, "02  AUTOMATIC CHOOSING · F04–F05", "Valid swaps applied by default; keep original for exceptions"], [870, "03  SHOP, SAVE & RECHECK · F06", "Photo/voice marking → database timeline → voice/text edits → fresh prices"], [1290, "04  OPTIONAL PAYMENT · P1 ONLY", "Build after P0; cart and photo input remain conditional; scheduling stays P2"]].forEach(([y,t,s])=>{frames.append(el('text',{x:64,y:y+30,class:'phase-title'},t),el('text',{x:64,y:y+52,class:'phase-sub'},s),el('line',{x1:64,y1:y+67,x2:1535,y2:y+67,class:'phase-line'}));});
+frames.append(el('rect',{x:580,y:280,width:0,height:0,fill:'none'}));
+const edgeGroup=document.getElementById('edges');edges.forEach(([from,to,d,label,x,y,kind])=>{edgeGroup.append(el('path',{d,class:'edge '+(kind||''),'marker-end':'url(#arrow)'}));if(label){const g=el('g',{class:'edge-label'});g.append(el('rect',{x:x-label.length*3.1-5,y:y-11,width:label.length*6.2+10,height:17,rx:4,fill:'#fafafc'}),el('text',{x,y,'text-anchor':'middle'},label));edgeGroup.append(g);}});
+const fills={user:['#eaf2ff','#bfd1ef'],system:['#ffffff','#cdd1dc'],decision:['#fff2c8','#d9c06d'],success:['#e7f1e3','#b3caa6'],future:['#f3edfc','#c6b5dc'],database:['#e3f3f2','#91bdb9'],agent:['#eae4ff','#b8a4ed']};
+function select(n){document.querySelectorAll('.node').forEach(g=>g.classList.toggle('selected',g.dataset.id===n.id));document.getElementById('detail-number').textContent=n.num==='START'?'Start here':'Step '+n.num;document.getElementById('detail-title').textContent=n.title;document.getElementById('detail-copy').textContent=n.copy;document.getElementById('detail-heading').textContent=n.type==='decision'?'Decision rules':'What this step delivers';const list=document.getElementById('detail-list');list.replaceChildren(...[...n.points,'Voice support: speak an answer/action; inspect the transcript; request a spoken readout. Text and buttons remain available.'].map(t=>{const li=document.createElement('li');li.textContent=t;return li;}));}
+const nodeGroup=document.getElementById('nodes');nodes.forEach(n=>{const g=el('g',{class:'node',transform:`translate(${n.x},${n.y})`,role:'button',tabindex:'0','aria-label':n.num+' '+n.title,'data-id':n.id});const [fill,stroke]=fills[n.type];let shape;if(n.type==='decision')shape=el('polygon',{points:'0,-56 80,0 0,56 -80,0',fill,stroke,class:'shape'});else shape=el('rect',{x:-90,y:-40,width:180,height:80,rx:n.id==='start'?40:7,fill,stroke,class:'shape',...(n.type==='future'?{'stroke-dasharray':'5 4'}:{})});g.append(shape,el('text',{x:0,y:n.type==='decision'?-66:-50,'text-anchor':'middle',class:'number'},n.num));n.lines.forEach((t,i)=>g.append(el('text',{x:0,y:-4+i*20,'text-anchor':'middle'},t)));g.addEventListener('click',()=>select(n));g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();select(n);}});nodeGroup.append(g);});
+const W=1680,H=1680;let scale=1,tx=0,ty=0,drag=null,printState=null;
+function paint(){world.setAttribute('transform',`translate(${tx} ${ty}) scale(${scale})`);document.getElementById('zoom-label').textContent=Math.round(scale*100)+'%';}
+function fit(){const r=canvas.getBoundingClientRect();scale=Math.max(.1,Math.min((r.width-70)/W,(r.height-100)/H,1));tx=(r.width-W*scale)/2;ty=(r.height-H*scale)/2+5;paint();}
+function focusArea(name){const areas={core:{y:0,h:820},retention:{y:855,h:380},payment:{y:1270,h:390}};const a=areas[name],r=canvas.getBoundingClientRect();scale=Math.max(.15,Math.min((r.width-65)/W,(r.height-100)/a.h,1));tx=(r.width-W*scale)/2;ty=(r.height-a.h*scale)/2-a.y*scale;paint();}document.querySelectorAll('[data-focus]').forEach(b=>b.addEventListener('click',()=>{focusArea(b.dataset.focus);select(nodes.find(n=>n.id==={core:'choose',retention:'return',payment:'offer'}[b.dataset.focus]));}));
+function zoom(factor,cx,cy){const r=canvas.getBoundingClientRect();cx=cx??r.width/2;cy=cy??r.height/2;const next=Math.max(.15,Math.min(2,scale*factor));tx=cx-(cx-tx)*next/scale;ty=cy-(cy-ty)*next/scale;scale=next;paint();}
+canvas.addEventListener('wheel',e=>{e.preventDefault();const r=canvas.getBoundingClientRect();zoom(Math.exp(-e.deltaY*.0015),e.clientX-r.left,e.clientY-r.top);},{passive:false});
+canvas.addEventListener('pointerdown',e=>{if(e.target.closest('button,.node,.zoom,.board-meta'))return;drag={x:e.clientX,y:e.clientY,tx,ty};canvas.setPointerCapture(e.pointerId);canvas.classList.add('dragging');});canvas.addEventListener('pointermove',e=>{if(!drag)return;tx=drag.tx+e.clientX-drag.x;ty=drag.ty+e.clientY-drag.y;paint();});function stop(){drag=null;canvas.classList.remove('dragging');}canvas.addEventListener('pointerup',stop);canvas.addEventListener('pointercancel',stop);
+document.getElementById('minus').addEventListener('click',()=>zoom(1/1.2));document.getElementById('plus').addEventListener('click',()=>zoom(1.2));document.getElementById('fit').addEventListener('click',fit);document.getElementById('print').addEventListener('click',()=>window.print());window.addEventListener('resize',fit);window.addEventListener('beforeprint',()=>{printState={scale,tx,ty};scale=.49;tx=15;ty=15;paint();});window.addEventListener('afterprint',()=>{if(printState){({scale,tx,ty}=printState);paint();}});focusArea('core');select(nodes.find(n=>n.id==='choose'));
+})();
+</script>
+</body>
+</html>

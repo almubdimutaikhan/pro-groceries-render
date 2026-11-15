@@ -1,0 +1,547 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Same Basket Brand Book</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+/* Brand book page chrome (uses the tokens; mobile-first, widens at 900px) */
+.bb{max-width:1180px;margin:0 auto;padding:32px var(--sb-gutter) 96px}
+.bb h1{font-size:var(--sb-text-3xl);font-weight:900;letter-spacing:var(--sb-tracking-head);line-height:var(--sb-leading-tight);margin:0 0 10px;text-wrap:balance}
+.bb .lede{color:var(--sb-ink-2);max-width:62ch;margin:0}
+.bb section{padding-top:var(--sb-s-14)}
+.bb h2{display:flex;gap:12px;align-items:baseline;font-size:var(--sb-text-2xl);font-weight:800;letter-spacing:-.01em;margin:0 0 6px}
+.bb h2 small{font-size:var(--sb-text-sm);color:var(--sb-ink-3);font-weight:600}
+.bb .sub{color:var(--sb-ink-2);margin:0 0 var(--sb-s-6);max-width:70ch;font-size:15px}
+.bb h3{font-size:var(--sb-text-base);font-weight:700;margin:0 0 10px}
+.grid{display:grid;gap:var(--sb-s-4);grid-template-columns:1fr}
+@media(min-width:700px){.grid.c2{grid-template-columns:1fr 1fr}.grid.c3{grid-template-columns:repeat(3,1fr)}.grid.c4{grid-template-columns:repeat(4,1fr)}}
+.panel{background:var(--sb-surface);border:1px solid var(--sb-line);border-radius:var(--sb-r-lg);padding:var(--sb-s-5);min-width:0}
+code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px}
+.muted{color:var(--sb-ink-3)}
+
+/* sources */
+.src-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+.src-head b{font-size:18px}
+.src-sw{display:flex;gap:6px;margin-bottom:14px}
+.src-sw i{flex:1;height:44px;border-radius:8px;border:1px solid rgba(0,0,0,.06)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:13.5px}
+.kv dt{color:var(--sb-ink-3)}
+.kv dd{margin:0;font-weight:600}
+
+/* swatches */
+.sw{display:flex;flex-direction:column;border-radius:var(--sb-r-lg);overflow:hidden;border:1px solid var(--sb-line);background:var(--sb-surface)}
+.sw .chip{height:84px;display:flex;align-items:flex-end;padding:10px 12px;font-weight:700;font-size:13px}
+.sw .meta{padding:10px 12px 12px;display:grid;gap:2px;font-size:13px}
+.sw .meta b{font-size:14px}
+.ratio{display:flex;height:40px;border-radius:var(--sb-r-sm);overflow:hidden;margin:6px 0 8px}
+.ratio span{display:grid;place-items:center;font-size:12px;font-weight:700}
+
+/* type */
+.type-row{display:grid;grid-template-columns:72px 1fr;gap:14px;align-items:baseline;padding:12px 0;border-bottom:1px solid var(--sb-line)}
+.type-row:last-child{border:0}
+.type-row .mono{color:var(--sb-ink-3)}
+
+/* radius + sizes */
+.rad{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media(min-width:700px){.rad{grid-template-columns:repeat(7,1fr)}}
+.rad div{aspect-ratio:1;max-width:100%;background:var(--sb-violet-100);border:2px solid var(--sb-violet-600);display:grid;place-items:center;text-align:center;font-size:12px;font-weight:700;color:var(--sb-violet-700);line-height:1.3}
+.size-row{display:flex;align-items:center;gap:14px;padding:8px 0}
+.size-row .bar{background:var(--sb-violet-100);border:1.5px dashed var(--sb-violet-500);border-radius:6px;flex:none;width:120px;display:grid;place-items:center;font-size:12px;font-weight:700;color:var(--sb-violet-700)}
+.size-row p{margin:0;font-size:13.5px}
+.sp{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap}
+.sp div{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--sb-ink-3)}
+.sp i{display:block;background:var(--sb-tag-400);border-radius:2px}
+
+/* components */
+.stack{display:flex;flex-direction:column;gap:12px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.radio{width:22px;height:22px;border-radius:50%;border:2px solid var(--sb-line-2);flex:none;display:grid;place-items:center}
+.sb-option[aria-checked="true"] .radio{border-color:var(--sb-violet-600);background:var(--sb-violet-600);box-shadow:inset 0 0 0 4px #fff}
+.swap{display:grid;gap:10px}
+.swap-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.swap-items{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center}
+.prod{display:flex;gap:10px;align-items:center;min-width:0}
+.thumb{width:44px;height:44px;border-radius:10px;background:var(--sb-bg);border:1px solid var(--sb-line);flex:none;display:grid;place-items:center}
+.prod b{display:block;font-size:14px;line-height:1.25}
+.prod span{font-size:12.5px;color:var(--sb-ink-3)}
+.old{text-decoration:line-through;color:var(--sb-ink-3)}
+.swap-why{font-size:13.5px;color:var(--sb-ink-2);background:var(--sb-bg);border-radius:var(--sb-r-sm);padding:8px 10px}
+.swap-act{display:grid;grid-template-columns:1fr 1fr auto;gap:8px}
+.swap-act .sb-btn{height:44px;font-size:15px;padding:0 10px}
+.toggle-on{background:var(--sb-violet-600);color:#fff;border-color:var(--sb-violet-600)}
+
+/* ---------- phone templates ---------- */
+.phones{display:flex;gap:28px;overflow-x:auto;padding:8px 4px 24px;scroll-snap-type:x mandatory}
+.ph-wrap{flex:none;scroll-snap-align:start;display:flex;flex-direction:column;gap:12px;width:min(347px,calc(100vw - 48px))}
+.ph-label{font-size:13px;font-weight:700}
+.ph-label span{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--sb-ink);color:#fff;font-size:11px;margin-right:8px}
+.ph-label em{display:block;font-style:normal;font-weight:500;color:var(--sb-ink-3);margin-top:4px;font-size:12.5px;line-height:1.4}
+.phone{width:100%;aspect-ratio:375/760;border-radius:38px;border:9px solid var(--sb-ink);background:var(--sb-bg);overflow:hidden;display:flex;flex-direction:column;position:relative}
+.ph-status{height:30px;flex:none;display:flex;justify-content:space-between;align-items:center;padding:0 22px;font-size:12px;font-weight:700}
+.ph-top{height:44px;flex:none;display:flex;align-items:center;gap:12px;padding:0 16px}
+.ph-top .back{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;color:var(--sb-ink-2)}
+.ph-top .sb-progress{flex:1}
+.ph-body{flex:1;padding:8px 18px 0;display:flex;flex-direction:column;gap:14px;overflow:hidden;min-height:0}
+.ph-foot{flex:none;padding:12px 18px 22px;display:flex;flex-direction:column;gap:10px;background:linear-gradient(transparent,var(--sb-bg) 24%)}
+.ph-foot .note{text-align:center;font-size:12px;color:var(--sb-ink-3)}
+.ph-h{font-size:27px;line-height:1.15;font-weight:900;letter-spacing:-.02em;margin:0;text-wrap:balance}
+.ph-p{margin:0;font-size:15px;color:var(--sb-ink-2);line-height:1.45}
+.logo{display:flex;align-items:center;gap:8px;font-weight:800;font-size:15px}
+.logo i{width:26px;height:26px;border-radius:8px;background:var(--sb-violet-600);display:grid;place-items:center}
+.receipt{background:#fff;border-radius:var(--sb-r-lg);padding:14px 14px 10px;box-shadow:var(--sb-shadow-card);font-size:13px;display:grid;gap:7px;position:relative}
+.receipt .r{display:flex;justify-content:space-between;gap:8px}
+.receipt .r.sv{color:var(--sb-save-600);font-weight:700}
+.receipt hr{border:0;border-top:1.5px dashed var(--sb-line-2);margin:2px 0}
+.receipt .tot{display:flex;justify-content:space-between;font-weight:800;font-size:15px}
+.stamp{position:absolute;right:-6px;top:-12px;transform:rotate(6deg);background:var(--sb-tag-400);color:var(--sb-tag-ink);font-weight:800;font-size:12.5px;padding:6px 10px;border-radius:8px;box-shadow:0 3px 0 #C98F00}
+.trust{display:flex;gap:14px;justify-content:center;font-size:12px;color:var(--sb-ink-2);font-weight:600}
+.trust span{display:flex;gap:5px;align-items:center}
+.inmethods{display:grid;gap:10px}
+.inmethod{display:flex;gap:12px;align-items:center;background:#fff;border:1.5px solid var(--sb-line);border-radius:var(--sb-r-md);padding:12px 14px;min-height:64px}
+.inmethod.on{border-color:var(--sb-violet-600);background:var(--sb-violet-100)}
+.inmethod .ic{width:38px;height:38px;border-radius:10px;background:var(--sb-bg);display:grid;place-items:center;flex:none}
+.inmethod.on .ic{background:#fff}
+.inmethod b{display:block;font-size:15.5px}
+.inmethod span{font-size:12.5px;color:var(--sb-ink-3)}
+.paste{background:#fff;border:1.5px solid var(--sb-violet-600);border-radius:var(--sb-r-sm);padding:12px;font-size:14px;line-height:1.6;color:var(--sb-ink);box-shadow:0 0 0 4px var(--sb-violet-100);min-height:120px}
+.paste .cur{display:inline-block;width:1.5px;height:16px;background:var(--sb-violet-600);vertical-align:-3px}
+.detected{font-size:13px;color:var(--sb-save-600);font-weight:700}
+.q-ctx{display:flex;gap:10px;align-items:center;background:#fff;border-radius:var(--sb-r-md);padding:10px 12px;border:1px solid var(--sb-line);font-size:13px}
+.q-ctx code{background:var(--sb-bg);padding:2px 6px;border-radius:5px}
+.big-save{text-align:center;padding:10px 0 2px}
+.big-save .lbl{font-size:13px;font-weight:700;color:var(--sb-ink-2);letter-spacing:.02em}
+.big-save .num{font-size:var(--sb-text-money);font-weight:900;letter-spacing:-.03em;line-height:1;color:var(--sb-save-500);margin:6px 0}
+.big-save .ctx{font-size:13.5px;color:var(--sb-ink-2)}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cmp div{background:#fff;border:1px solid var(--sb-line);border-radius:var(--sb-r-md);padding:10px 12px}
+.cmp small{display:block;font-size:12px;color:var(--sb-ink-3);font-weight:600}
+.cmp b{font-size:20px;letter-spacing:-.01em}
+.cmp .now{border-color:var(--sb-save-500);background:var(--sb-save-50)}
+.why-list{background:#fff;border-radius:var(--sb-r-lg);border:1px solid var(--sb-line);padding:4px 14px}
+.why-list .r{display:flex;justify-content:space-between;padding:10px 0;font-size:13.5px;border-bottom:1px solid var(--sb-line)}
+.why-list .r:last-child{border:0}
+.mini-swap{background:#fff;border:1.5px solid var(--sb-line);border-radius:var(--sb-r-lg);padding:12px;display:grid;gap:8px}
+.mini-swap.locked{background:var(--sb-bg);border-style:dashed}
+.ms-top{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.ms-top b{font-size:14.5px}
+.ms-sub{font-size:12.5px;color:var(--sb-ink-3)}
+.ms-act{display:flex;gap:8px}
+.ms-act span{flex:1;height:38px;border-radius:10px;border:1.5px solid var(--sb-line-2);display:grid;place-items:center;font-size:13.5px;font-weight:700}
+.ms-act span.on{background:var(--sb-violet-600);border-color:var(--sb-violet-600);color:#fff}
+.ms-act span.lock{flex:none;width:38px}
+.total-bar{display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:700}
+.total-bar b{color:var(--sb-save-600)}
+.paywall-top{background:var(--sb-night);color:#fff;margin:-8px -18px 0;padding:18px 18px 22px;border-radius:0 0 var(--sb-r-xl) var(--sb-r-xl)}
+.paywall-top .ph-h{color:#fff;font-size:24px}
+.paywall-top p{margin:8px 0 0;color:#E2E5E9;font-size:14px}
+.ledger{display:flex;gap:4px;align-items:flex-end;height:52px;margin-top:14px}
+.ledger i{flex:1;background:var(--sb-violet-400);border-radius:4px 4px 0 0;opacity:.9}
+.ledger i:last-child{background:var(--sb-tag-400)}
+.plan{background:#fff;border:1.5px solid var(--sb-line);border-radius:var(--sb-r-md);padding:12px 14px;display:flex;justify-content:space-between;align-items:center;position:relative}
+.plan.on{border-color:var(--sb-violet-600);background:var(--sb-violet-100)}
+.plan b{font-size:15.5px;display:block}
+.plan span{font-size:12.5px;color:var(--sb-ink-3)}
+.plan .pr{text-align:right}
+.plan .pr b{font-size:17px}
+.plan .tagx{position:absolute;top:-10px;left:14px;background:var(--sb-tag-400);color:var(--sb-tag-ink);font-size:11px;font-weight:800;padding:3px 8px;border-radius:999px}
+.incl{display:grid;gap:7px;font-size:13.5px}
+.incl div{display:flex;gap:8px;align-items:flex-start}
+.incl svg{flex:none;margin-top:2px}
+
+/* do / don't */
+.dd li{margin-bottom:8px;font-size:14.5px;line-height:1.5}
+.dd .do h3{color:var(--sb-save-600)}
+.dd .dont h3{color:var(--sb-danger)}
+</style>
+</head>
+<body>
+<main class="bb">
+
+<header>
+  <div class="logo" style="margin-bottom:22px"><i><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 10h14l-1.5 9h-11z"/><path d="M9 10l3-6 3 6"/></svg></i>Same Basket</div>
+  <h1>Brand book v1</h1>
+  <p class="lede">Colours, type, corner radii, block sizes and screen templates for the Same Basket web app. Built mobile-first at 375px. It borrows its look from Zimran, Finelo and Coursiv, and adjusts it for US grocery shoppers. Values tagged <b>src</b> in <code>tokens.css</code> were pulled from those sites' live CSS on 14 Nov 2026.</p>
+</header>
+
+<!-- 01 SOURCES -->
+<section>
+  <h2>01 · What we pulled <small>from the live stylesheets</small></h2>
+  <p class="sub">All three share one violet-indigo CTA (#5653FE family), Inter, tall thumb-sized buttons and a quiz-funnel structure. We keep those so the product feels part of the family.</p>
+  <div class="grid c3">
+    <div class="panel">
+      <div class="src-head"><b>Zimran</b><span class="muted mono">zimran.io</span></div>
+      <div class="src-sw"><i style="background:#5B42DC"></i><i style="background:#4F31BA"></i><i style="background:#5553F5"></i><i style="background:#E2E2ED"></i><i style="background:#F2F2F2"></i><i style="background:#0C0C0C"></i></div>
+      <dl class="kv">
+        <dt>Primary</dt><dd>Power Violet #5B42DC</dd>
+        <dt>Others</dt><dd>Deep #4F31BA · Bright #5553F5 · Lavender #E2E2ED · Almost Air #F2F2F2</dd>
+        <dt>Font</dt><dd>UpMax (custom), Arial fallback</dd>
+        <dt>Radius</dt><dd>4–6px (rounded-sm/md), 16px max</dd>
+        <dt>Buttons</dt><dd>64px / 48px / 46px tall, 20px bold</dd>
+        <dt>Container</dt><dd>1440px, 444px mobile column</dd>
+      </dl>
+    </div>
+    <div class="panel">
+      <div class="src-head"><b>Finelo</b><span class="muted mono">finelo.com</span></div>
+      <div class="src-sw"><i style="background:#5653FE"></i><i style="background:#777EF7"></i><i style="background:#9796FF"></i><i style="background:#F4B05E"></i><i style="background:#8DC63F"></i><i style="background:#09081B"></i></div>
+      <dl class="kv">
+        <dt>Primary</dt><dd>#777EF7 on #5653FE edge</dd>
+        <dt>Grounds</dt><dd>#09081B · #12101F · #1C1A24 · border #1D1D30; light #F5F5FE</dd>
+        <dt>Warm</dt><dd>#F4B05E · #FCECD7 · green #8DC63F</dd>
+        <dt>Font</dt><dd>Inter, 800–900 headlines</dd>
+        <dt>Radius</dt><dd>24px (most used), 32, 20, 16, 12, full</dd>
+        <dt>Signature</dt><dd>Tactile button: 3px bottom edge; depth cards <code>0 4px 0</code> + soft shadow</dd>
+        <dt>Rhythm</dt><dd>88px section gap, 112px page space</dd>
+      </dl>
+    </div>
+    <div class="panel">
+      <div class="src-head"><b>Coursiv</b><span class="muted mono">coursiv.io</span></div>
+      <div class="src-sw"><i style="background:#5653FE"></i><i style="background:#4534BB"></i><i style="background:#FFB800"></i><i style="background:#91E245"></i><i style="background:#291D2F"></i><i style="background:#100018"></i></div>
+      <dl class="kv">
+        <dt>Action</dt><dd>#5653FE, hover ink #4534BB</dd>
+        <dt>Grounds</dt><dd>#100018 · #291D2F · info #331E3E</dd>
+        <dt>Accent</dt><dd>Yellow #FFB800 highlight word in H1; lime #AEFC05</dd>
+        <dt>Font</dt><dd>Inter + Libre Caslon Text accents</dd>
+        <dt>Radius</dt><dd>8px (127 uses), 16px cards, 12px CTA</dd>
+        <dt>Buttons</dt><dd>48px (h-12) and 56px (h-14) · 18px semibold · glow <code>0 6px 22px #5653FE73</code></dd>
+        <dt>Container</dt><dd>1088px; cards 335px on mobile</dd>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<!-- 02 COLOUR -->
+<section>
+  <h2>02 · Colour <small>for our audience</small></h2>
+  <p class="sub">The audience is US household shoppers, mostly 28 to 55, budgeting for a family and anxious about the weekly bill. Finelo and Coursiv sit on dark plum, which reads as trading or tech. For groceries we flip to a light, airy ground and keep the family violet for actions. Green is reserved for money the shopper keeps, and yellow for price tags and promos. Every hue already exists in the three sources.</p>
+  <div class="ratio">
+    <span style="flex:62;background:var(--sb-bg);color:var(--sb-ink-2)">62% ground + white</span>
+    <span style="flex:22;background:var(--sb-ink);color:#fff">22% ink</span>
+    <span style="flex:10;background:var(--sb-violet-600);color:#fff">10% violet</span>
+    <span style="flex:4;background:var(--sb-save-500);color:#fff"></span>
+    <span style="flex:2;background:var(--sb-tag-400)"></span>
+  </div>
+  <p class="muted" style="font-size:13px;margin:0 0 18px">Usage ratio per screen. Green and yellow are small. If a screen looks green, the saving has lost its punch.</p>
+  <div class="grid c4">
+    <div class="sw"><div class="chip" style="background:#5653FE;color:#fff">Basket Violet</div><div class="meta"><b>#5653FE</b><code>--sb-violet-600</code><span class="muted">Primary CTA, links, selected state</span></div></div>
+    <div class="sw"><div class="chip" style="background:#4534BB;color:#fff">Violet Edge</div><div class="meta"><b>#4534BB</b><code>--sb-violet-700</code><span class="muted">CTA bottom edge, pressed</span></div></div>
+    <div class="sw"><div class="chip" style="background:#EEEEFF;color:#4534BB">Violet Wash</div><div class="meta"><b>#EEEEFF</b><code>--sb-violet-100</code><span class="muted">Selected option card</span></div></div>
+    <div class="sw"><div class="chip" style="background:#F5F5FE;color:#4A4E7D;border-bottom:1px solid #E7E7EF">Air</div><div class="meta"><b>#F5F5FE</b><code>--sb-bg</code><span class="muted">App background</span></div></div>
+    <div class="sw"><div class="chip" style="background:#16A34A;color:#fff">Kept Green</div><div class="meta"><b>#16A34A / #15803D</b><code>--sb-save-500 / 600</code><span class="muted">Saving amount only. 500 at ≥24px, 600 for small text</span></div></div>
+    <div class="sw"><div class="chip" style="background:#FFB800;color:#3C2A1E">Price Tag</div><div class="meta"><b>#FFB800</b><code>--sb-tag-400</code><span class="muted">Promo chips, headline highlight, focus ring</span></div></div>
+    <div class="sw"><div class="chip" style="background:#171526;color:#fff">Ink</div><div class="meta"><b>#171526</b><code>--sb-ink</code><span class="muted">Headings and body. #4A4E7D secondary, #6E6F86 hints</span></div></div>
+    <div class="sw"><div class="chip" style="background:#100018;color:#fff">Night</div><div class="meta"><b>#100018</b><code>--sb-night</code><span class="muted">Paywall header and the dark band only</span></div></div>
+  </div>
+</section>
+
+<!-- 03 TYPE -->
+<section>
+  <h2>03 · Type <small>Inter only, like Finelo and Coursiv</small></h2>
+  <p class="sub">Heavy, tight headlines (800–900) with a medium-weight body. Prices use tabular figures. Inputs stay at 16px so iOS never zooms in.</p>
+  <div class="panel">
+    <div class="type-row"><span class="mono">56 / 900</span><span class="sb-money" style="font-size:56px;font-weight:900;letter-spacing:-.03em;line-height:1;color:var(--sb-save-500)">$13.50</span></div>
+    <div class="type-row"><span class="mono">32 / 900</span><span style="font-size:32px;font-weight:900;letter-spacing:-.02em;line-height:1.15">Same groceries. <span class="sb-mark">Smaller</span> bill.</span></div>
+    <div class="type-row"><span class="mono">24 / 800</span><span style="font-size:24px;font-weight:800;letter-spacing:-.01em">Review 3 swaps</span></div>
+    <div class="type-row"><span class="mono">18 / 600</span><span style="font-size:18px;font-weight:600">Check my basket · option text</span></div>
+    <div class="type-row"><span class="mono">16 / 500</span><span>Store-brand milk is the same 2% gallon from the same dairy region, $1.00 cheaper.</span></div>
+    <div class="type-row"><span class="mono">14 / 600</span><span style="font-size:14px;font-weight:600;color:var(--sb-ink-2)">Kroger Downtown · prices checked 9:41 AM</span></div>
+    <div class="type-row"><span class="mono">12 / 500</span><span style="font-size:12px;color:var(--sb-ink-3)">Estimate before tax. Final price at checkout may differ.</span></div>
+  </div>
+</section>
+
+<!-- 04 RADIUS -->
+<section>
+  <h2>04 · Corner radius</h2>
+  <p class="sub">Small things get small corners. We stay between Zimran's sharp 4–6px and Finelo's soft 24px. Use one radius per role and never mix two on the same level.</p>
+  <div class="rad">
+    <div style="border-radius:6px">6<br>checkbox, tag</div>
+    <div style="border-radius:8px">8<br>input, small btn</div>
+    <div style="border-radius:12px">12<br>CTA, option</div>
+    <div style="border-radius:16px">16<br>card</div>
+    <div style="border-radius:24px">24<br>sheet, panel</div>
+    <div style="border-radius:32px">32<br>hero banner</div>
+    <div style="border-radius:999px">pill<br>chip, toggle</div>
+  </div>
+</section>
+
+<!-- 05 SIZES -->
+<section>
+  <h2>05 · Block sizes and spacing</h2>
+  <p class="sub">The base is a 375px phone: 20px side gutters give 335px of content, matching Coursiv's mobile cards. The column stops at 480px on larger screens. The page container is 1088px.</p>
+  <div class="grid c2">
+    <div class="panel">
+      <h3>Heights</h3>
+      <div class="size-row"><div class="bar" style="height:72px">72</div><p><b>Basket line item</b><br><span class="muted">thumb 44 + two lines</span></p></div>
+      <div class="size-row"><div class="bar" style="height:64px">64</div><p><b>Option / quiz card</b><br><span class="muted">Zimran 64px button</span></p></div>
+      <div class="size-row"><div class="bar" style="height:56px">56</div><p><b>Primary CTA · input · top bar</b><br><span class="muted">Coursiv h-14</span></p></div>
+      <div class="size-row"><div class="bar" style="height:48px">48</div><p><b>Secondary button</b><br><span class="muted">Coursiv h-12</span></p></div>
+      <div class="size-row"><div class="bar" style="height:44px">44</div><p><b>Minimum tap target</b></p></div>
+      <div class="size-row"><div class="bar" style="height:28px">28</div><p><b>Chip</b></p></div>
+      <div class="size-row"><div class="bar" style="height:6px"></div><p><b>Progress bar · 6</b></p></div>
+    </div>
+    <div class="panel">
+      <h3>Widths</h3>
+      <dl class="kv" style="margin-bottom:22px">
+        <dt>375</dt><dd>Design base (iPhone mini–15)</dd>
+        <dt>20</dt><dd>Side gutter on mobile</dd>
+        <dt>335</dt><dd>Content width on 375</dd>
+        <dt>480</dt><dd>Max column for every flow screen, centred on desktop</dd>
+        <dt>1088</dt><dd>Desktop page container (landing only)</dd>
+      </dl>
+      <h3>Spacing scale · 4px base</h3>
+      <div class="sp">
+        <div><i style="width:4px;height:4px"></i>4</div><div><i style="width:8px;height:8px"></i>8</div><div><i style="width:12px;height:12px"></i>12</div><div><i style="width:16px;height:16px"></i>16</div><div><i style="width:20px;height:20px"></i>20</div><div><i style="width:24px;height:24px"></i>24</div><div><i style="width:32px;height:32px"></i>32</div><div><i style="width:40px;height:40px"></i>40</div><div><i style="width:56px;height:56px"></i>56</div><div><i style="width:88px;height:88px"></i>88</div>
+      </div>
+      <p class="muted" style="font-size:13px;margin:14px 0 0">12 inside cards, 16 between cards, 24 between groups, 88 between landing sections.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 06 COMPONENTS -->
+<section>
+  <h2>06 · Components</h2>
+  <p class="sub">The tactile CTA is the family signature: a hard 4px violet edge that drops on press. Cards get the Finelo depth shadow, toned down for a light ground.</p>
+  <div class="grid c3">
+    <div class="panel stack">
+      <h3>Buttons</h3>
+      <button class="sb-cta" type="button">Check my basket</button>
+      <button class="sb-cta" type="button" style="transform:translateY(3px);box-shadow:0 1px 0 var(--sb-violet-700)">Pressed</button>
+      <button class="sb-cta" type="button" disabled>Add at least 3 items</button>
+      <div class="row"><button class="sb-btn" type="button">Paste a list instead</button><a class="sb-link" href="#t1">Skip</a></div>
+    </div>
+    <div class="panel stack">
+      <h3>Option cards</h3>
+      <div class="sb-option" role="radio" aria-checked="true"><span class="radio"></span>2% milk, 1 gallon</div>
+      <div class="sb-option" role="radio" aria-checked="false"><span class="radio"></span>Whole milk, 1 gallon</div>
+      <div class="sb-option" role="radio" aria-checked="false"><span class="radio"></span>Not sure, keep what I buy</div>
+    </div>
+    <div class="panel stack">
+      <h3>Input · chips · progress</h3>
+      <label for="demo-zip" style="font-size:14px;font-weight:600">ZIP code</label>
+      <input id="demo-zip" class="sb-input" value="45202" inputmode="numeric">
+      <div class="row">
+        <span class="sb-chip sb-chip--save">−$1.00</span>
+        <span class="sb-chip sb-chip--promo">Sale till Thu</span>
+        <span class="sb-chip sb-chip--exact">Exact match</span>
+        <span class="sb-chip sb-chip--ask">Your call</span>
+      </div>
+      <div class="sb-progress"><i style="width:40%"></i></div>
+    </div>
+  </div>
+  <div class="grid c2" style="margin-top:16px">
+    <div class="sb-card swap">
+      <div class="swap-top"><h3 style="margin:0">Swap card</h3><span class="sb-chip sb-chip--save">−$1.20</span></div>
+      <div class="swap-items">
+        <div class="prod"><div class="thumb"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6E6F86" stroke-width="1.8"><ellipse cx="12" cy="13" rx="6" ry="8"/></svg></div><div><b>Eggland's Best large</b><span class="old">$4.49</span> · 37¢/egg</div></div>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4A4E7D" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        <div class="prod"><div class="thumb"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5653FE" stroke-width="1.8"><ellipse cx="12" cy="13" rx="6" ry="8"/></svg></div><div><b>Kroger large, 12</b><span>$3.29 · 27¢/egg</span></div></div>
+      </div>
+      <div class="swap-why">Same size grade A large eggs, dozen. <span class="sb-chip sb-chip--exact" style="height:22px;font-size:12px">Good substitute</span></div>
+      <div class="swap-act"><button class="sb-btn toggle-on" type="button">Swap</button><button class="sb-btn" type="button">Keep mine</button><button class="sb-btn" type="button" aria-label="Lock item" style="width:44px;padding:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></button></div>
+    </div>
+    <div class="sb-card">
+      <h3>Price breakdown row</h3>
+      <div class="why-list" style="border:0;padding:0">
+        <div class="r"><span>Shelf price</span><span class="sb-price">$128.40</span></div>
+        <div class="r"><span>Store-brand swaps (3)</span><span class="sb-price" style="color:var(--sb-save-600);font-weight:700">−$3.70</span></div>
+        <div class="r"><span>This week's promos (4) <span class="sb-chip sb-chip--promo" style="height:20px;font-size:11px">Sale</span></span><span class="sb-price" style="color:var(--sb-save-600);font-weight:700">−$9.80</span></div>
+        <div class="r"><span class="muted">Digital coupons</span><span class="muted">not included</span></div>
+        <div class="r" style="font-weight:800;font-size:16px"><span>Estimated total</span><span class="sb-price">$114.90</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 07 TEMPLATES -->
+<section id="t1">
+  <h2>07 · Screen templates <small>375 × 760, swipe →</small></h2>
+  <p class="sub">The first-visit path in six screens. The CTA is always pinned to the bottom in thumb reach. Each screen asks one thing. There's no signup before the result.</p>
+  <div class="phones">
+
+    <!-- T1 entry -->
+    <div class="ph-wrap">
+      <div class="ph-label"><span>1</span>Entry: CTA above the fold<em>One promise, one button. A real receipt is the hero image, not an illustration.</em></div>
+      <div class="phone">
+        <div class="ph-status"><span>9:41</span><span>●●● ▮</span></div>
+        <div class="ph-top" style="justify-content:space-between"><div class="logo"><i><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 10h14l-1.5 9h-11z"/><path d="M9 10l3-6 3 6"/></svg></i>Same Basket</div><span style="font-size:13px;font-weight:600;color:var(--sb-ink-2)">Log in</span></div>
+        <div class="ph-body" style="gap:18px">
+          <h2 class="ph-h" style="font-size:32px;margin-top:6px">Same groceries.<br><span class="sb-mark">Smaller</span> bill.</h2>
+          <p class="ph-p">Drop in last week's receipt. We rebuild the same basket at Kroger for less, with today's prices.</p>
+          <div class="receipt">
+            <span class="stamp">−$13.50</span>
+            <div class="r"><span>2% MILK GAL</span><span class="sb-price">$3.99</span></div>
+            <div class="r sv"><span>→ Kroger 2% gallon</span><span class="sb-price">$2.99</span></div>
+            <div class="r"><span>LG EGGS 12CT</span><span class="sb-price">$4.49</span></div>
+            <div class="r sv"><span>→ Kroger large, 12</span><span class="sb-price">$3.29</span></div>
+            <hr>
+            <div class="tot"><span>Same basket</span><span class="sb-price">$114.90</span></div>
+          </div>
+        </div>
+        <div class="ph-foot">
+          <button class="sb-cta" type="button">Check my basket</button>
+          <div class="trust"><span>No signup</span><span>Under a minute</span><span>Free</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- T2 input -->
+    <div class="ph-wrap">
+      <div class="ph-label"><span>2</span>Bring your basket<em>Three ways in. Paste is open by default because it's the fastest to build first.</em></div>
+      <div class="phone">
+        <div class="ph-status"><span>9:41</span><span>●●● ▮</span></div>
+        <div class="ph-top"><span class="back">←</span><div class="sb-progress"><i style="width:25%"></i></div></div>
+        <div class="ph-body">
+          <h2 class="ph-h">What's in your usual basket?</h2>
+          <div class="inmethods">
+            <div class="inmethod"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4A4E7D" stroke-width="1.8"><rect x="3" y="6" width="18" height="14" rx="3"/><circle cx="12" cy="13" r="3.5"/><path d="M8 6l1.5-2h5L16 6"/></svg></span><div><b>Snap a receipt</b><span>Paper or screenshot</span></div></div>
+            <div class="inmethod on"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5653FE" stroke-width="1.8"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/></svg></span><div><b>Paste a list</b><span>From Notes, texts, anywhere</span></div></div>
+          </div>
+          <div class="paste">milk 2%<br>eggs dozen<br>chicken breast 2 lb<br>rice, bananas, our coffee<span class="cur"></span></div>
+          <div class="detected">✓ 6 items found</div>
+        </div>
+        <div class="ph-foot">
+          <button class="sb-cta" type="button">Find cheaper options</button>
+          <div class="note">Kroger stores only for now</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- T3 one question -->
+    <div class="ph-wrap">
+      <div class="ph-label"><span>3</span>One quick question<em>Shown only when a match is unclear. Quiz-card pattern from the Zimran funnels; tapping an option moves on.</em></div>
+      <div class="phone">
+        <div class="ph-status"><span>9:41</span><span>●●● ▮</span></div>
+        <div class="ph-top"><span class="back">←</span><div class="sb-progress"><i style="width:50%"></i></div></div>
+        <div class="ph-body">
+          <div class="q-ctx">Your list says <code>our coffee</code></div>
+          <h2 class="ph-h">Which coffee do you usually buy?</h2>
+          <div class="stack" style="gap:10px">
+            <div class="sb-option" role="radio" aria-checked="true"><span class="radio"></span>Folgers Classic, 25 oz</div>
+            <div class="sb-option" role="radio" aria-checked="false"><span class="radio"></span>Starbucks Pike Place, 12 oz</div>
+            <div class="sb-option" role="radio" aria-checked="false"><span class="radio"></span>Something else</div>
+          </div>
+          <label style="display:flex;gap:10px;align-items:center;font-size:14px;font-weight:600;color:var(--sb-ink-2)"><span style="width:22px;height:22px;border-radius:6px;background:var(--sb-violet-600);display:grid;place-items:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5"><path d="M5 12l5 5 9-10"/></svg></span>Never swap my coffee</label>
+        </div>
+        <div class="ph-foot">
+          <div class="note">1 of 1 question</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- T4 result -->
+    <div class="ph-wrap">
+      <div class="ph-label"><span>4</span>The result<em>The number first, then the receipt behind it, so it holds up next to the Kroger app.</em></div>
+      <div class="phone">
+        <div class="ph-status"><span>9:41</span><span>●●● ▮</span></div>
+        <div class="ph-top"><span class="back">←</span><div class="sb-progress"><i style="width:75%"></i></div></div>
+        <div class="ph-body">
+          <div class="big-save">
+            <div class="lbl">SAME BASKET, THIS WEEK</div>
+            <div class="num sb-money">$13.50 less</div>
+            <div class="ctx">Kroger Downtown · checked 9:41 AM</div>
+          </div>
+          <div class="cmp">
+            <div><small>Your usual</small><b class="sb-price">$128.40</b></div>
+            <div class="now"><small>Rebuilt</small><b class="sb-price">$114.90</b></div>
+          </div>
+          <div class="why-list">
+            <div class="r"><span>3 store-brand swaps</span><span class="sb-price" style="color:var(--sb-save-600);font-weight:700">−$3.70</span></div>
+            <div class="r"><span>4 items on sale now</span><span class="sb-price" style="color:var(--sb-save-600);font-weight:700">−$9.80</span></div>
+            <div class="r"><span class="muted">Coffee locked, unchanged</span><span class="muted">$0</span></div>
+          </div>
+        </div>
+        <div class="ph-foot">
+          <button class="sb-cta" type="button">Review 3 swaps</button>
+          <div class="note">Estimate before tax. Prices can change at checkout.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- T5 swaps -->
+    <div class="ph-wrap">
+      <div class="ph-label"><span>5</span>Review swaps<em>Biggest win first. Swap, keep mine, or lock. The total updates live in the footer.</em></div>
+      <div class="phone">
+        <div class="ph-status"><span>9:41</span><span>●●● ▮</span></div>
+        <div class="ph-top"><span class="back">←</span><b style="font-size:16px">3 swaps</b></div>
+        <div class="ph-body" style="gap:10px">
+          <div class="mini-swap">
+            <div class="ms-top"><b>Oats 42 oz → Kroger</b><span class="sb-chip sb-chip--save">−$1.50</span></div>
+            <div class="ms-sub">9.5¢ vs 13.1¢ per oz · Exact match</div>
+            <div class="ms-act"><span class="on">Swap</span><span>Keep mine</span><span class="lock">🔒︎</span></div>
+          </div>
+          <div class="mini-swap">
+            <div class="ms-top"><b>Eggs 12 → Kroger large</b><span class="sb-chip sb-chip--save">−$1.20</span></div>
+            <div class="ms-sub">27¢ vs 37¢ per egg · Good substitute</div>
+            <div class="ms-act"><span class="on">Swap</span><span>Keep mine</span><span class="lock">🔒︎</span></div>
+          </div>
+          <div class="mini-swap locked">
+            <div class="ms-top"><b>Milk 2% gallon</b><span class="sb-chip" style="background:#fff;color:var(--sb-ink-2)">Kept yours</span></div>
+            <div class="ms-sub">Store brand would save $1.00</div>
+          </div>
+        </div>
+        <div class="ph-foot">
+          <div class="total-bar"><span>New total $116.40</span><b>−$12.00</b></div>
+          <button class="sb-cta" type="button">Get my shopping list</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- T6 paywall -->
+    <div class="ph-wrap">
+      <div class="ph-label"><span>6</span>Keep saving (after the free list)<em>Zimran-style paywall, honest version: price, renewal and the free path are all visible.</em></div>
+      <div class="phone">
+        <div class="ph-status" style="background:var(--sb-night);color:#fff"><span>9:41</span><span>●●● ▮</span></div>
+        <div class="ph-body" style="gap:12px">
+          <div class="paywall-top">
+            <h2 class="ph-h">Your list is ready. Want this every Sunday?</h2>
+            <p>We re-price your basket weekly and ping you only when it saves $5 or more.</p>
+            <div class="ledger"><i style="height:40%"></i><i style="height:55%"></i><i style="height:35%"></i><i style="height:70%"></i><i style="height:90%"></i></div>
+          </div>
+          <div class="plan on"><span class="tagx">Most picked</span><div><b>Yearly</b><span>About $4.08/mo, billed yearly</span></div><div class="pr"><b class="sb-price">$49</b><span>/year</span></div></div>
+          <div class="plan"><div><b>Monthly</b><span>Cancel anytime</span></div><div class="pr"><b class="sb-price">$5.99</b><span>/month</span></div></div>
+          <div class="incl">
+            <div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#15803D" stroke-width="3"><path d="M5 12l5 5 9-10"/></svg>Sunday re-price of your saved basket</div>
+            <div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#15803D" stroke-width="3"><path d="M5 12l5 5 9-10"/></svg>Savings ledger checked against receipts</div>
+          </div>
+        </div>
+        <div class="ph-foot">
+          <button class="sb-cta" type="button">Start for $49/year</button>
+          <div class="note"><span class="sb-link" style="font-size:12px">Keep my free list</span> · renews yearly</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- 08 DO / DON'T -->
+<section>
+  <h2>08 · Keep it human</h2>
+  <div class="grid c2 dd">
+    <div class="panel do">
+      <h3>Do</h3>
+      <ul>
+        <li>Use real products, real prices, real store names in every mockup.</li>
+        <li>Show the receipt. It's our most recognisable object; draw it with dashed rules and tabular prices.</li>
+        <li>Write like a friend who's good with money: "Kept yours", "Saves $1.20", "Your call".</li>
+        <li>One highlight word per headline, yellow marker style, like Coursiv.</li>
+        <li>Product photos on plain white tiles (44px thumbs).</li>
+      </ul>
+    </div>
+    <div class="panel dont">
+      <h3>Don't</h3>
+      <ul>
+        <li>No gradients behind text, no glassmorphism, no purple-to-blue hero blobs.</li>
+        <li>No emoji as icons, no sparkle "AI" icons, no robot mascots.</li>
+        <li>No 3-column feature grids with icon + title + sentence.</li>
+        <li>No "Unlock", "Supercharge", "Seamless", "Effortless", "Revolutionize".</li>
+        <li>No fake urgency timers or "only 2 spots left" on the paywall.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</main>
+</body>
+</html>

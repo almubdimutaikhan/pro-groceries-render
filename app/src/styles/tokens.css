@@ -1,0 +1,236 @@
+/* =====================================================================
+   Same Basket, Cheaper: design tokens v1
+   Built in the family style of Zimran / Finelo / Coursiv.
+   Values marked [src: …] were pulled from the live CSS of those sites
+   on 2026-11-14. Unmarked values are our own, derived for this audience.
+   ===================================================================== */
+
+@import url("https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=IBM+Plex+Mono:wght@500;600&display=swap");
+
+:root {
+  /* ---------- Brand: violet (the studio-family colour) ---------- */
+  --sb-violet-50:  #F5F5FE;  /* page tint            [src: Finelo #f5f5fe]            */
+  --sb-violet-100: #EEEEFF;  /* selected option bg   [src: Coursiv --landing-action2] */
+  --sb-violet-200: #D5D4FF;  /* selected border      [src: Coursiv #d5d4ff]           */
+  --sb-violet-400: #9796FF;  /* on-dark accent       [src: Finelo --blog-accent]      */
+  --sb-violet-500: #777EF7;  /* soft accent          [src: Finelo --blog-accent-strong]*/
+  --sb-violet-600: #5653FE;  /* PRIMARY CTA          [src: Coursiv --landing-action, Finelo #5653fe] */
+  --sb-violet-700: #4534BB;  /* CTA edge / pressed   [src: Coursiv --cta-hover-text]  */
+  --sb-violet-800: #2E2A7A;  /* deep, rare           (derived)                        */
+
+  /* ---------- Savings green: only for money the shopper keeps ---------- */
+  --sb-save-50:  #E8F6EA;    /* saving chip bg       [src: Coursiv #e8f6ea]           */
+  --sb-save-500: #16A34A;    /* big saving numbers   [src: Coursiv #16a34a] (≥24px only) */
+  --sb-save-600: #15803D;    /* saving text <24px    (derived, 5:1 on white)          */
+
+  /* ---------- Price-tag yellow: promos + headline highlight ---------- */
+  --sb-tag-100: #FFF4D6;     /* promo row bg         (derived)                        */
+  --sb-tag-400: #FFB800;     /* tag / highlight      [src: Coursiv --landing-warning] */
+  --sb-tag-ink: #3C2A1E;     /* text on yellow       [src: Coursiv #3c2a1e]           */
+
+  /* ---------- Neutrals (indigo-biased, never pure grey) ---------- */
+  --sb-ink:    #171526;      /* headings, body       [src: Finelo #171526]            */
+  --sb-ink-2:  #4A4E7D;      /* secondary text       [src: Finelo #4a4e7d]            */
+  --sb-ink-3:  #6E6F86;      /* captions, hints      (derived from Finelo #78788e, AA) */
+  --sb-line:   #E7E7EF;      /* borders, dividers    [src: Finelo #e7e7ef]            */
+  --sb-line-2: #D2CDEB;      /* stronger border      [src: Finelo #d2cdeb]            */
+  --sb-bg:     #F5F5FE;      /* app background       [src: Finelo #f5f5fe]            */
+  --sb-surface:#FFFFFF;      /* cards, sheets                                          */
+  --sb-night:  #100018;      /* dark band / paywall  [src: Coursiv --landing-bg]      */
+  --sb-night-2:#291D2F;      /* dark card            [src: Coursiv --landing-bg2]     */
+
+  /* ---------- Status ---------- */
+  --sb-danger: #E5484D;      /* errors               [src: Coursiv primer error]      */
+  --sb-locked: #4A4E7D;      /* locked item icon = ink-2                               */
+
+  /* ---------- Type ---------- */
+  --sb-font: "Archivo", "Helvetica Neue", Arial, sans-serif;           /* body: Archivo at normal width */
+  --sb-font-display: "Archivo", "Arial Black", "Helvetica Neue", sans-serif; /* headlines: Archivo Expanded (font-stretch 125%) – shelf-sign feel */
+  --sb-font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;    /* receipts, prices, sizes */
+  --sb-stretch-display: 125%;
+  --sb-text-xs:   12px;  /* legal, timestamps          */
+  --sb-text-sm:   14px;  /* captions, chips            */
+  --sb-text-base: 16px;  /* body, inputs (never <16 on inputs: iOS zoom) */
+  --sb-text-lg:   18px;  /* CTA label, option text     [src: Coursiv h-14 text-lg]   */
+  --sb-text-xl:   20px;  /* card titles                [src: Zimran 20px buttons]    */
+  --sb-text-2xl:  24px;  /* section heads              */
+  --sb-text-3xl:  32px;  /* screen H1 mobile           [src: Coursiv h1 32/40]       */
+  --sb-text-4xl:  48px;  /* H1 desktop                 [src: Coursiv lg:48/56]       */
+  --sb-text-money:56px;  /* the saving number          (derived)                     */
+  --sb-weight-body: 500;
+  --sb-weight-ui:   600;
+  --sb-weight-head: 800;
+  --sb-leading-tight: 1.15;
+  --sb-leading-body:  1.5;
+  --sb-tracking-head: -0.02em;
+
+  /* ---------- Radius ---------- */
+  --sb-r-xs:   3px;   /* tags, chips, checkboxes      [src: Zimran rounded-[3px]]     */
+  --sb-r-sm:   4px;   /* inputs, small buttons        [src: Zimran rounded-sm 4px]    */
+  --sb-r-md:   6px;   /* CTA, option cards            [src: Zimran rounded-md 6px]    */
+  --sb-r-lg:   8px;   /* cards                        [src: Coursiv rounded-lg 8px]   */
+  --sb-r-xl:   12px;  /* sheets, big panels                                         */
+  --sb-r-2xl:  16px;  /* hero / closing banner                                      */
+  --sb-r-pill: 999px; /* progress bar and toggles only, never buttons                 */
+
+  /* ---------- Spacing (4px base) [src: Zimran --spacing .25rem] ---------- */
+  --sb-s-1: 4px;  --sb-s-2: 8px;  --sb-s-3: 12px; --sb-s-4: 16px;
+  --sb-s-5: 20px; --sb-s-6: 24px; --sb-s-8: 32px; --sb-s-10: 40px;
+  --sb-s-12: 48px; --sb-s-14: 56px; --sb-s-22: 88px; /* 88 = section gap [src: Finelo --landing-section-gap] */
+
+  /* ---------- Block sizes ---------- */
+  --sb-h-cta:      56px;  /* primary CTA             [src: Coursiv h-14]          */
+  --sb-h-btn:      48px;  /* secondary button        [src: Coursiv h-12, Zimran 48] */
+  --sb-h-btn-sm:   40px;  /* compact / nav           [src: Finelo h-10]           */
+  --sb-h-input:    56px;  /* text input              */
+  --sb-h-option:   64px;  /* quiz/option card min    [src: Zimran 64px button; Coursiv min-h-14] */
+  --sb-h-row:      72px;  /* basket line item        */
+  --sb-h-topbar:   56px;  /* app header              */
+  --sb-h-progress: 6px;   /* funnel progress bar     */
+  --sb-touch-min:  44px;  /* any tap target          */
+  --sb-w-funnel:   480px; /* mobile-first column max [src: Finelo 480/520, Coursiv 580] */
+  --sb-w-card-m:   335px; /* card on 375 phone       [src: Coursiv max-w-[335px]] */
+  --sb-w-page:     1088px;/* desktop container       [src: Coursiv max-w-[1088px]] */
+  --sb-gutter:     20px;  /* side padding mobile     [src: Coursiv px-5]          */
+
+  /* ---------- Elevation ---------- */
+  /* Tactile CTA: hard bottom edge, the Finelo/Coursiv signature  [src: Finelo border-b-[3px] #5653fe; 0 5px 0 #403999] */
+  --sb-shadow-cta: 0 4px 0 var(--sb-violet-700);
+  --sb-shadow-cta-glow: 0 4px 0 var(--sb-violet-700), 0 10px 22px rgba(86, 83, 254, .32); /* [src: Coursiv 0 6px 22px rgba(86,83,254,.45)] */
+  /* Depth card  [src: Finelo .finelo-depth-card: inset 0 1px 0 rim, 0 4px 0 base, 0 14px 28px shadow] */
+  --sb-shadow-card: 0 1px 0 var(--sb-line), 0 2px 0 var(--sb-line);
+  --sb-shadow-sheet: 0 -8px 30px rgba(23, 21, 38, .12);
+
+  /* ---------- Motion [src: Zimran default .15s cubic-bezier(.4,0,.2,1)] ---------- */
+  --sb-ease: cubic-bezier(.4, 0, .2, 1);
+  --sb-flow: cubic-bezier(.2, .8, .2, 1);   /* entrances: fast out, soft landing */
+  --sb-fast: 150ms;
+  --sb-med:  240ms;
+
+  /* ---------- Theme-dependent roles (light values; dark overrides below) ---------- */
+  color-scheme: light;
+  --sb-edge:        var(--sb-ink);         /* hard outlines and offset shadows   */
+  --sb-on-ink:      #FFFFFF;               /* text on an ink-coloured block      */
+  --sb-violet-ink:  var(--sb-violet-700);  /* violet text on a violet tint       */
+  --sb-accent-text: var(--sb-violet-600);  /* violet text on the page background */
+  --sb-save-line:   #BFE5C7;
+  --sb-tag-line:    #F3DA97;
+  --sb-tag-soft-ink:var(--sb-tag-ink);     /* text on the pale yellow tint       */
+  --sb-info-bg:     #E6F0FF;
+  --sb-info-ink:    #1D4FB8;
+  --sb-info-line:   #BFD3F6;
+  --sb-danger-bg:   #FDECEC;
+  --sb-danger-ink:  #9B1C22;
+  --sb-danger-line: #F3C5C6;
+}
+
+/* ---------- Dark theme: set by src/lib/theme.ts on <html data-theme="dark"> ---------- */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --sb-violet-50:  #1E1B3A;
+  --sb-violet-100: #29255A;
+  --sb-violet-200: #423D8C;
+
+  --sb-save-50:  #12301D;
+  --sb-save-500: #22C55E;
+  --sb-save-600: #4ADE80;
+
+  --sb-tag-100: #3A2E12;
+
+  --sb-ink:    #F1F0FA;
+  --sb-ink-2:  #BDBEDF;
+  --sb-ink-3:  #9495B2;
+  --sb-line:   #2A2746;
+  --sb-line-2: #3D3966;
+  --sb-bg:     #100E1F;
+  --sb-surface:#1A1731;
+  --sb-night:  #221C40;
+  --sb-night-2:#2E2752;
+
+  --sb-danger: #F2656A;
+
+  --sb-edge:        #5F5A92;
+  --sb-on-ink:      #171526;
+  --sb-violet-ink:  #C3C2FF;
+  --sb-accent-text: #A3A2FF;
+  --sb-save-line:   #1F5A34;
+  --sb-tag-line:    #6B5417;
+  --sb-tag-soft-ink:#FFD77A;
+  --sb-info-bg:     #16264A;
+  --sb-info-ink:    #9DBBFF;
+  --sb-info-line:   #2B4580;
+  --sb-danger-bg:   #3A1719;
+  --sb-danger-ink:  #FFA9AC;
+  --sb-danger-line: #6E2A2D;
+
+  --sb-shadow-sheet: 0 -8px 30px rgba(0, 0, 0, .5);
+}
+
+/* ---------- Base ---------- */
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--sb-bg); color: var(--sb-ink);
+  font: var(--sb-weight-body) var(--sb-text-base)/var(--sb-leading-body) var(--sb-font);
+  -webkit-font-smoothing: antialiased;
+  transition: background-color var(--sb-med) var(--sb-ease), color var(--sb-med) var(--sb-ease);
+}
+::selection { background: var(--sb-violet-600); color: #fff; }
+.sb-money, .sb-price { font-variant-numeric: tabular-nums; }
+
+/* ---------- Core components ---------- */
+.sb-cta {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%; height: var(--sb-h-cta); padding: 0 var(--sb-s-8);
+  border: 0; border-radius: var(--sb-r-md);
+  background: var(--sb-violet-600); color: #fff;
+  font: var(--sb-weight-ui) var(--sb-text-lg)/1 var(--sb-font);
+  box-shadow: var(--sb-shadow-cta); cursor: pointer;
+  transition: transform var(--sb-fast) var(--sb-ease), box-shadow var(--sb-fast) var(--sb-ease), background var(--sb-fast) var(--sb-ease);
+}
+.sb-cta:hover  { background: #4F4BF0; }
+.sb-cta:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--sb-violet-700); }
+.sb-cta:focus-visible { outline: 3px solid var(--sb-tag-400); outline-offset: 3px; }
+.sb-cta:disabled { background: var(--sb-line-2); color: var(--sb-ink-3); box-shadow: none; cursor: default; }
+
+.sb-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: var(--sb-h-btn); padding: 0 var(--sb-s-5);
+  border: 1.5px solid var(--sb-line-2); border-radius: var(--sb-r-md);
+  background: var(--sb-surface); color: var(--sb-ink);
+  font: var(--sb-weight-ui) var(--sb-text-base)/1 var(--sb-font); cursor: pointer;
+}
+.sb-link { color: var(--sb-accent-text); font-weight: var(--sb-weight-ui); text-decoration: underline; text-underline-offset: 3px; }
+
+.sb-option {
+  display: flex; align-items: center; gap: var(--sb-s-3);
+  min-height: var(--sb-h-option); padding: var(--sb-s-3) var(--sb-s-4);
+  border: 1.5px solid var(--sb-line); border-radius: var(--sb-r-md);
+  background: var(--sb-surface); font-size: var(--sb-text-lg); font-weight: var(--sb-weight-ui);
+  cursor: pointer; transition: border-color var(--sb-fast), background var(--sb-fast);
+}
+.sb-option[aria-checked="true"] { border-color: var(--sb-violet-600); background: var(--sb-violet-100); }
+
+.sb-card {
+  background: var(--sb-surface); border: 1px solid var(--sb-line);
+  border-radius: var(--sb-r-lg); padding: var(--sb-s-4); box-shadow: var(--sb-shadow-card);
+}
+
+.sb-input {
+  width: 100%; min-height: var(--sb-h-input); padding: 14px var(--sb-s-4);
+  border: 1.5px solid var(--sb-line-2); border-radius: var(--sb-r-sm);
+  background: var(--sb-surface); color: var(--sb-ink);
+  font: var(--sb-weight-body) var(--sb-text-base)/1.45 var(--sb-font);
+}
+.sb-input:focus { outline: none; border-color: var(--sb-violet-600); box-shadow: 0 0 0 4px var(--sb-violet-100); }
+
+.sb-chip { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: var(--sb-r-pill); font-size: var(--sb-text-sm); font-weight: var(--sb-weight-ui); }
+.sb-chip--save  { background: var(--sb-save-50);  color: var(--sb-save-600); }
+.sb-chip--promo { background: var(--sb-tag-400);  color: var(--sb-tag-ink); }
+.sb-chip--exact { background: var(--sb-violet-100); color: var(--sb-violet-ink); }
+.sb-chip--ask   { background: var(--sb-danger-bg); color: var(--sb-danger-ink); }
+
+.sb-progress { height: var(--sb-h-progress); border-radius: var(--sb-r-pill); background: var(--sb-line); overflow: hidden; }
+.sb-progress > i { display: block; height: 100%; border-radius: inherit; background: var(--sb-violet-600); }
+
+/* Coursiv-style headline highlight: one word, yellow marker underlay */
+.sb-mark { background: linear-gradient(transparent 58%, var(--sb-tag-400) 58%, var(--sb-tag-400) 92%, transparent 92%); padding: 0 2px; }
