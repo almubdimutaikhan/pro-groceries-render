@@ -127,3 +127,19 @@ export function coreTokens(text: string): string[] {
       .filter(w => w.length > 1 && !STOPWORDS.has(w)),
   )];
 }
+
+/**
+ * Brand names that speech-to-text commonly mishears or spells differently. Applied to the shopper's text
+ * before brands are read, so "Jiff peanut butter" and "Land O'Lakes butter" find the right product.
+ */
+export const BRAND_ALIASES: Array<[RegExp, string]> = [
+  [/\bj(?:iff|eff)\b(?=\s+(?:creamy|crunchy|peanut|natural|reduced))/gi, 'Jif'],
+  [/\bjiff\b/gi, 'Jif'],
+  [/\bland\s*o['’]?\s*lake['’]?s\b/gi, 'Land O Lakes'],
+  [/\beg+l(?:an|in|and)d?['’]?[sz]\b/gi, "Eggland's"],
+  [/\begg\s*lands?['’]?[sz]?\b/gi, "Eggland's"],
+  [/\bb[ao]r[ie]l+(?:a|as|ith|us|is)?\b/gi, 'Barilla'],
+  [/\bhein[sz]e?\b/gi, 'Heinz'],
+  [/\bhellman['’]?s\b/gi, "Hellmann's"],
+  [/\btea\s?bags?\b/gi, 'tea bags'],
+];

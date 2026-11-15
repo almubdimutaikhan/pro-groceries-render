@@ -12,7 +12,7 @@ Built in 24 hours by a team of two for the **Money** track. B2C, web, US adults 
 | **Swaps** | Deterministic code in integer cents. No AI touches a price, a total or a swap decision |
 | **Voice, receipt photo, read aloud** | MangiSoz speech, OCR and emotional TTS (first female voice, neutral), through our server so no key reaches the browser |
 | **No account** | The basket lives in the browser (IndexedDB); one tap clears it |
-| **Tests** | 30 app tests (engine, flavor rules, matching, cache, shopper flow) and 22 server tests (Kroger proxy, voice/photo proxy, abuse limits) |
+| **Tests** | 49 app tests (engine, flavor rules, matching, spoken lists, cache, shopper flow) and 23 server tests (Kroger proxy, voice/photo proxy, abuse limits) |
 
 ## For reviewers: where to look
 

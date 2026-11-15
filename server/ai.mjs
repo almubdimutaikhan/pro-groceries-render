@@ -41,7 +41,7 @@ const SCHEMA = {
     },
   },
 };
-const SYSTEM_PROMPT = 'Split a US grocery list into items. Copy each item exactly as the shopper wrote it. Never invent sizes, brands or prices. Do not merge or drop items.';
+const SYSTEM_PROMPT = 'Split a US grocery list into items. A spoken list often reads "Barilla spaghetti, 16-ounce, Heinz ketchup, 32-ounce, Eggland\'s Best large eggs, a dozen": a size or quantity such as "16-ounce", "32 oz", "100-count" or "a dozen" belongs to the item it describes (the one just before it) and is never an item by itself. Copy each item exactly as the shopper said it, including its size. Never invent sizes, brands or prices. Do not merge or drop items.';
 
 class HttpError extends Error {
   constructor(status, message) { super(message); this.status = status; }

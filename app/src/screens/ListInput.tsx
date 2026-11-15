@@ -5,7 +5,7 @@ import { VoiceButton, PhotoButton, useMangisoz } from '../components/voice';
 import { go } from '../state/router';
 import { setState, useApp } from '../state/store';
 import { parseText } from '../state/actions';
-import { parseList, SAMPLE_LIST } from '../lib/parser';
+import { parseList, PLACEHOLDER_LIST, SAMPLE_LIST } from '../lib/parser';
 import { receiptToList } from '../lib/mangisoz';
 import { formatQty } from '../lib/units';
 
@@ -93,8 +93,8 @@ export function ListInput() {
         className="sb-input list-box"
         value={text}
         onChange={e => update(e.target.value)}
-        placeholder={'2 Barilla spaghetti 16 oz\nTide detergent 64 loads\nmilk\nchicken breast 2 lb'}
-        rows={6}
+        placeholder={PLACEHOLDER_LIST}
+        rows={8}
         autoCapitalize="none"
         spellCheck={false}
       />

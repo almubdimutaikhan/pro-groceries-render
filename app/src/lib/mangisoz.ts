@@ -10,7 +10,6 @@ import { getCreds, AI_PROXY_BASE, mangisozViaProxy } from './credentials';
 import { proxyFetch } from './backend';
 
 const BASE = 'https://mangisoz.nu.edu.kz/backend/api/v1';
-const STT_BRANDS = 'Tide, Barilla, Kroger, Simple Truth, Private Selection, Horizon, Eggland\'s Best, Cheerios, Folgers, Heinz, Skippy, Jif, Bounty, Charmin, Chobani, Quaker, Ragu, Dawn, Gain, Fairlife, Starbucks';
 
 /** What a shopper is told when voice or photo can't work. Details go to the console for the operator, never to the shopper. */
 export const VOICE_UNAVAILABLE = "Voice isn't available right now. Type your list instead.";
@@ -39,8 +38,9 @@ export async function transcribe(audio: Blob, language = 'en'): Promise<string> 
   fd.append('file', audio, `voice.${ext}`);
   fd.append('language', language);
   fd.append('response_format', 'json');
-  // Brand names in the prompt fix real mishearings (verified: "Tide" came back as "tied" without it).
-  fd.append('prompt', `A US grocery shopping list with brands, sizes and quantities. Brands: ${STT_BRANDS}.`);
+  // No `prompt` field on purpose. Tested 15 Nov 2026 on a spoken 8-item list: with a brand-list prompt the
+  // service dropped half the items (or answered "jim jim"); with none it heard every item. Brand mishearings
+  // are fixed afterwards by BRAND_ALIASES in vocab.ts.
   const res = mangisozViaProxy()
     ? await proxyFetch(`${AI_PROXY_BASE}/stt`, { method: 'POST', body: fd, signal: AbortSignal.timeout(60000) })
     : await fetch(`${BASE}/stt/audio/transcriptions`, {

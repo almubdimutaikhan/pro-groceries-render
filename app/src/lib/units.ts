@@ -52,7 +52,7 @@ export function parseSize(label: string | null | undefined): Qty | null {
     const u = unitOf(multi[3]);
     if (u && u[0] !== 'ct') return { amount: round(n * num(multi[2]) * u[1]), unit: u[0] };
   }
-  const single = new RegExp(String.raw`${NUM}\s*${UNIT}\b`).exec(s);
+  const single = new RegExp(String.raw`${NUM}[\s-]*${UNIT}\b`).exec(s);
   if (single) {
     const u = unitOf(single[2]);
     const n = num(single[1]);
@@ -64,9 +64,10 @@ export function parseSize(label: string | null | undefined): Qty | null {
 /** Find a size inside free text (a list line). Returns the match so it can be cut out of the description. */
 export function findSize(text: string): { qty: Qty; match: string } | null {
   const s = text.toLowerCase();
-  const dz = /\b(\d+\s*)?dozen\b/.exec(s);
+  // "a dozen", "one dozen", "2 dozen": the article goes with the size, so no stray "a" is left in the product name.
+  const dz = /\b(?:(\d+)\s*|an?\s+|one\s+)?dozen\b/.exec(s);
   if (dz) return { qty: { amount: 12 * (dz[1] ? Number(dz[1]) : 1), unit: 'ct' }, match: dz[0] };
-  const re = new RegExp(String.raw`${NUM}\s*${UNIT}\b`, 'i');
+  const re = new RegExp(String.raw`${NUM}[\s-]*${UNIT}\b`, 'i');
   const m = re.exec(text);
   if (!m) return null;
   const q = parseSize(m[0]);

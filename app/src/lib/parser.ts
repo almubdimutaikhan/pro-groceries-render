@@ -1,17 +1,27 @@
 import type { ListLine } from './types';
 import { findSize } from './units';
-import { KEEP_AS_IS, NATIONAL_BRANDS, UNSUPPORTED, KROGER_BRANDS, variantsIn } from './vocab';
+import { BRAND_ALIASES, KEEP_AS_IS, NATIONAL_BRANDS, UNSUPPORTED, KROGER_BRANDS, variantsIn } from './vocab';
 
 let seq = 0;
 export const newId = (p = 'l') => `${p}_${Date.now().toString(36)}${(seq++).toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 
 /** Split pasted text into item strings: new lines, bullets, commas and semicolons. Keeps "1,000" intact. */
 export function splitItems(text: string): string[] {
-  return text
+  const pieces = text
     .replace(/\r/g, '')
     .split(/\n|;|,(?!\d{3})|•|·/)
     .map(s => s.replace(/^\s*(?:[-*–]|\d+[.)])\s+/, '').replace(/^\s*\[\s?[x ]?\s?\]\s*/i, '').trim())
     .filter(s => s.length > 1 && /[a-z]/i.test(s));
+  // A spoken list often reads "Heinz ketchup, 32-ounce, Jif peanut butter, 16-ounce": a piece that is only a
+  // size or a quantity belongs to the item before it.
+  const out: string[] = [];
+  for (const piece of pieces) {
+    const size = findSize(piece);
+    const onlySize = !!size && piece.replace(size.match, '').replace(/\b(a|an|of|the|and|about|around)\b/gi, '').replace(/[^a-z0-9]/gi, '') === '';
+    if (onlySize && out.length) out[out.length - 1] += ` ${piece}`;
+    else out.push(piece);
+  }
+  return out;
 }
 
 function title(s: string): string {
@@ -23,7 +33,8 @@ function title(s: string): string {
  * Never produces a price, product ID or total.
  */
 export function parseLine(raw: string): ListLine {
-  let text = ` ${raw.trim()} `;
+  // A comma inside ONE item is speech-to-text noise ("Eggland's Best Large, eggs a dozen"); items are split earlier.
+  let text = ` ${BRAND_ALIASES.reduce((t, [re, to]) => t.replace(re, to), raw.trim().replace(/\s*,\s*/g, ' '))} `;
   const lower = text.toLowerCase();
 
   // count: "2 Barilla…", "2x milk", "milk x2"
@@ -86,4 +97,20 @@ export const SAMPLE_LIST = [
   'Dawn dish soap 19.4 fl oz',
   'chicken breast 2 lb',
   'bananas',
+].join('\n');
+
+/**
+ * The list shown greyed-out in the list box, and the one to read aloud in a demo. Branded packaged goods
+ * where Kroger sells a same-size, same-variant store-brand equivalent, so the saving is real (checked on
+ * live Kroger prices, 15 Nov 2026). Names and sizes only, never prices.
+ */
+export const PLACEHOLDER_LIST = [
+  '2 Barilla spaghetti 16 oz',
+  'Heinz ketchup 32 oz',
+  "Eggland's Best large eggs 12 ct",
+  'Chobani plain Greek yogurt 32 oz',
+  'Lipton black tea bags 100 ct',
+  'Land O Lakes butter 16 oz',
+  'Philadelphia cream cheese 8 oz',
+  'Jif creamy peanut butter 16 oz',
 ].join('\n');
